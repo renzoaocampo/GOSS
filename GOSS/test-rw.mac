@@ -13,7 +13,7 @@
 /my_geom/worldXY   25.0 cm
 /my_geom/worldZ    30.0 cm
 #
-/my_phys/setList    QGSP_BIC_HP_EMZ
+/my_phys/setList   EMStandardPhysics_option4
 #
 /run/initialize
 #
