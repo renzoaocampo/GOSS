@@ -1,11 +1,12 @@
 #================================================
 # Macro file to test IAEAphsp writer
 #================================================
-/control/verbose 1
-/run/verbose 1
+/control/verbose 0
+/run/verbose 0
 /tracking/verbose 0
 /event/verbose 0
 #
+
 /action/IAEAphspWriter/namePrefix  psf_z
 /action/IAEAphspWriter/zphsp       50.1 cm
 /action/IAEAphspWriter/zphsp       60.5 cm
@@ -13,7 +14,7 @@
 /my_geom/worldXY   25.0 cm
 /my_geom/worldZ   100.0 cm
 #
-/my_phys/setList    QGSP_BIC_HP_EMZ
+/my_phys/setList  EMStandardPhysics_option4
 #
 /run/initialize
 #
@@ -29,6 +30,6 @@
 /my_beam/Z0   0.0 cm
 /my_beam/verbose  2
 #
-##/run/printProgress  10
-/run/beamOn         50
+/run/beamOn        3000000
+/run/printProgress  1000
 #

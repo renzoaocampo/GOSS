@@ -36,15 +36,16 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
+
 #include "PhysicsList.hh"
 #include "PhysicsListMessenger.hh"
 
 #include "globals.hh"
 #include "G4SystemOfUnits.hh"
-#include "G4PhysListFactory.hh"
-#include "G4VModularPhysicsList.hh"
 #include "G4VPhysicsConstructor.hh"
+#include "G4VModularPhysicsList.hh"
 
+// Particle constructors
 #include "G4BosonConstructor.hh"
 #include "G4LeptonConstructor.hh"
 #include "G4MesonConstructor.hh"
@@ -52,105 +53,77 @@
 #include "G4IonConstructor.hh"
 #include "G4ShortLivedConstructor.hh"
 
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+// Electromagnetic physics lists
+#include "G4EmStandardPhysics.hh"
+#include "G4EmStandardPhysics_option1.hh"
+#include "G4EmStandardPhysics_option2.hh"
+#include "G4EmStandardPhysics_option3.hh"
+#include "G4EmStandardPhysics_option4.hh"
+#include "G4EmLivermorePhysics.hh"
+#include "G4EmPenelopePhysics.hh"
 
 PhysicsList::PhysicsList(): G4VModularPhysicsList()
 {
-  SetDefaultCutValue(1.0*mm);
-
-  // This is to force setting the physics list with macro command
-  fPhysListIsSet = false;
-
-  fVerbose = 1;
-  fMessenger = new PhysicsListMessenger(this);
+    SetDefaultCutValue(1.0*mm);
+    fPhysListIsSet = false;
+    fVerbose = 1;
+    fMessenger = new PhysicsListMessenger(this);
 }
-
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 PhysicsList::~PhysicsList()
 {
-  delete fMessenger;
+    delete fMessenger;
 }
-
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void PhysicsList::ConstructParticle()
 {
-  if(fVerbose > 0) {
-    G4cout << "### PhysicsList Construct Particles" << G4endl;
-  }
-  // This method is invoked when the Geant4 application starts
-  // (do not mix with run initialization).
+    if(fVerbose > 0) G4cout << "### PhysicsList Construct Particles" << G4endl;
 
-  // (Taken from G4DecayPhysics)
-  G4BosonConstructor  pBosonConstructor;
-  pBosonConstructor.ConstructParticle();
-
-  G4LeptonConstructor pLeptonConstructor;
-  pLeptonConstructor.ConstructParticle();
-
-  G4MesonConstructor pMesonConstructor;
-  pMesonConstructor.ConstructParticle();
-
-  G4BaryonConstructor pBaryonConstructor;
-  pBaryonConstructor.ConstructParticle();
-
-  G4IonConstructor pIonConstructor;
-  pIonConstructor.ConstructParticle();
-
-  G4ShortLivedConstructor pShortLivedConstructor;
-  pShortLivedConstructor.ConstructParticle();
+    G4BosonConstructor  pBosonConstructor;  pBosonConstructor.ConstructParticle();
+    G4LeptonConstructor pLeptonConstructor; pLeptonConstructor.ConstructParticle();
+    G4MesonConstructor  pMesonConstructor;  pMesonConstructor.ConstructParticle();
+    G4BaryonConstructor pBaryonConstructor; pBaryonConstructor.ConstructParticle();
+    G4IonConstructor    pIonConstructor;    pIonConstructor.ConstructParticle();
+    G4ShortLivedConstructor pShortLivedConstructor; pShortLivedConstructor.ConstructParticle();
 }
-
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void PhysicsList::ConstructProcess()
 {
-  if(fVerbose > 0) {
-    G4cout << "### PhysicsList Construct Processes" << G4endl;
-  }
+    if(fVerbose > 0) G4cout << "### PhysicsList Construct Processes" << G4endl;
 
-  if (fPhysListIsSet)
-    G4VModularPhysicsList::ConstructProcess();
-  else
-    G4Exception("PhysicsList::ConstructProcess()", "PhysList001",
-		FatalException, "No PHYSICS LIST has been set!");
+    if (fPhysListIsSet)
+        G4VModularPhysicsList::ConstructProcess();
+    else
+        G4Exception("PhysicsList::ConstructProcess()", "PhysList001",
+                    FatalException, "No PHYSICS LIST has been set!");
 }
-
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 void PhysicsList::SetPhysicsList(const G4String& name)
 {
-  if(fVerbose > 0)
-    G4cout << "### PhysicsList set physics list <" << name
-           << "> " << G4endl;
+    if(fVerbose > 0)
+        G4cout << "### PhysicsList set physics list <" << name << "> " << G4endl;
 
-  if (!fPhysListIsSet) {
-    G4PhysListFactory factory;
-    G4VModularPhysicsList* phys = factory.GetReferencePhysList(name);
+    if (!fPhysListIsSet)
+    {
+        G4VPhysicsConstructor* emPhysics = nullptr;
 
-    size_t ii = 0;
-    const G4VPhysicsConstructor* elem = phys->GetPhysics(ii);
-    G4VPhysicsConstructor* tmp = const_cast<G4VPhysicsConstructor*> (elem);
-    while (elem) {
-      RegisterPhysics(tmp);
-      G4cout << "PhysicsList Type: " << elem->GetPhysicsType() << G4endl;
-      G4cout << "PhysicsList Name: " << elem->GetPhysicsName() << G4endl;
-      elem = phys->GetPhysics(++ii);
-      tmp = const_cast<G4VPhysicsConstructor*> (elem);
+        if (name == "EMStandardPhysics")          emPhysics = new G4EmStandardPhysics();
+        else if (name == "EMStandardPhysics_option1") emPhysics = new G4EmStandardPhysics_option1();
+        else if (name == "EMStandardPhysics_option2") emPhysics = new G4EmStandardPhysics_option2();
+        else if (name == "EMStandardPhysics_option3") emPhysics = new G4EmStandardPhysics_option3();
+        else if (name == "EMStandardPhysics_option4") emPhysics = new G4EmStandardPhysics_option4();
+        else if (name == "EMLivermore")           emPhysics = new G4EmLivermorePhysics();
+        else if (name == "EMPenelope")            emPhysics = new G4EmPenelopePhysics();
+        else
+        {
+            G4Exception("PhysicsList::SetPhysicsList()", "PhysList001",
+                        JustWarning, "Unknown EM physics list, defaulting to EMStandardPhysics");
+            emPhysics = new G4EmStandardPhysics();
+        }
+
+        RegisterPhysics(emPhysics);
+        fPhysListIsSet = true;
+
+        G4cout << name << " EM physics list has been ACTIVATED." << G4endl;
     }
-
-    G4cout << name << " reference physics List has been ACTIVATED."
-	   << G4endl;
-
-    // Update the flag, the physics list is set
-    fPhysListIsSet = true;
-  }
 }
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

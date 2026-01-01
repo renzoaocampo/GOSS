@@ -6,12 +6,12 @@
 /tracking/verbose 1
 /event/verbose 0
 #
-/action/IAEAphspReader/fileName   phsp/test
+/action/IAEAphspReader/fileName   ../../phsp/test
 #
 /my_geom/worldXY   25.0 cm
 /my_geom/worldZ   100.0 cm
 #
-/my_phys/setList    QGSP_BIC_HP_EMZ
+/my_phys/setList EMStandardPhysics_option4
 #
 /run/initialize
 #
@@ -22,5 +22,5 @@
 /IAEAphspReader/parallelRun          2   # 1 <= value <= tot_parallel 
 #
 #/run/printProgress  10
-/run/beamOn     50
+/run/beamOn     3
 #
