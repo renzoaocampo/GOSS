@@ -1,4 +1,6 @@
 # GOSS: Geant4 Orchestrated Scoring Suite
+
+
 GOSS is a lightweight orchestration suite for Geant4 that consolidates existing components into a structured, reproducible workflow. It is designed to simplify setup and reduce boilerplate while maintaining full flexibility for dose scoring and analysis.
 
 Key Features
