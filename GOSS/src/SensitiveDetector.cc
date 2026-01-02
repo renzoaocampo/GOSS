@@ -7,26 +7,18 @@
 #include "G4ios.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4AnalysisManager.hh"
-#include <fstream>
-#include <thread>
-#include <sstream>
+#include "G4LogicalVolume.hh"
 #include <cmath>
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
-namespace {
-  std::string GetThreadID() {
-    std::ostringstream oss;
-    oss << std::this_thread::get_id();
-    return oss.str();
-  }
-}
+#include <iomanip>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 MySensitiveDetector::MySensitiveDetector(const G4String& name,
                      const G4String& hitsCollectionName)
- : G4VSensitiveDetector(name)
+ : G4VSensitiveDetector(name),
+   fDetectorMass(0.0),
+   fMassInitialized(false),
+   fEventCounter(0)
 {
   collectionName.insert(hitsCollectionName);
 }
@@ -49,18 +41,32 @@ G4bool MySensitiveDetector::ProcessHits(G4Step* aStep, G4TouchableHistory*)
   G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
   const G4TouchableHandle touchable = preStepPoint->GetTouchableHandle();
   int copyNumber = touchable->GetCopyNumber();
+  
+  // Get detector mass ONCE (same for all detectors sharing logical volume)
+  if (!fMassInitialized) {
+    G4LogicalVolume* logVol = touchable->GetVolume()->GetLogicalVolume();
+    fDetectorMass = logVol->GetMass() / kg;  // Store in kg for Gy calculation
+    fMassInitialized = true;
+    G4cout << "=== Detector Mass Initialized ===" << G4endl;
+    G4cout << "  Mass: " << fDetectorMass * 1e6 << " mg" << G4endl;
+    G4cout << "  Material: " << logVol->GetMaterial()->GetName() << G4endl;
+    G4cout << "=================================" << G4endl;
+  }
+  
+  // Store detector position ONCE per detector (position is constant)
+  if (xposition.find(copyNumber) == xposition.end()) {
+    G4ThreeVector pos = touchable->GetTranslation();
+    xposition[copyNumber] = pos.x() / cm;
+    yposition[copyNumber] = pos.y() / cm;
+    zposition[copyNumber] = pos.z() / cm;
+  }
  
-  // Accumulate total energy deposited per detector
-  energyDepositMap[copyNumber] += edep/eV;
+  // Accumulate total energy deposited per detector (in Joules for Gy)
+  G4double edep_J = edep / joule;
+  energyDepositMap[copyNumber] += edep_J;
   
   // Accumulate per-event energy for E^2 calculation
-  IndepCuadraticEnergyDepositMap[copyNumber] += edep/eV;
-  
-  // Store detector position (overwrites each step, but position is constant)
-  posDetector = touchable->GetTranslation();
-  xposition[copyNumber] = posDetector.x()/cm;
-  yposition[copyNumber] = posDetector.y()/cm;
-  zposition[copyNumber] = posDetector.z()/cm;
+  IndepCuadraticEnergyDepositMap[copyNumber] += edep_J;
   
   return true;
 }
@@ -74,11 +80,10 @@ void MySensitiveDetector::EndOfEvent(G4HCofThisEvent*)
     cuadraticEnergyDepositMap[pair.first] += std::pow(pair.second, 2);
   }
   
-  std::string threadID = GetThreadID();
-  threadEventCounters[threadID]++;
+  fEventCounter++;
   
-  // Write output every 100k events
-  if (threadEventCounters[threadID] % 100000 == 0) {
+  // Write output every 1M events
+  if (fEventCounter % 1000000 == 0) {
     G4AnalysisManager* man = G4AnalysisManager::Instance();
     
     // Delete previous ntuple and recreate (intentional overwrite)
@@ -87,46 +92,59 @@ void MySensitiveDetector::EndOfEvent(G4HCofThisEvent*)
     std::string fileName = "output.csv";
     man->OpenFile(fileName);
     
-    // Create ntuple structure
+    // Create ntuple structure - DOSE in Gy
     man->CreateNtuple("dose", "Dose Scoring Results");
     man->CreateNtupleDColumn("Detector_Number");
-    man->CreateNtupleDColumn("x");
-    man->CreateNtupleDColumn("y");
-    man->CreateNtupleDColumn("z");
-    man->CreateNtupleDColumn("Total_Energy_Deposited");
-    man->CreateNtupleDColumn("Energy_Per_Particle");
-    man->CreateNtupleDColumn("Energy_Squared_Sum");
-    man->CreateNtupleDColumn("Quadric_Energy_Per_Particle");
-    man->CreateNtupleDColumn("3sigma");
-    man->CreateNtupleDColumn("nEventCounterThread");
+    man->CreateNtupleDColumn("x_cm");
+    man->CreateNtupleDColumn("y_cm");
+    man->CreateNtupleDColumn("z_cm");
+    man->CreateNtupleDColumn("Total_Dose_Gy");
+    man->CreateNtupleDColumn("Dose_Per_Particle_Gy");
+    man->CreateNtupleDColumn("Dose_Squared_Sum");
+    man->CreateNtupleDColumn("Mean_Dose_Squared_Gy2");
+    man->CreateNtupleDColumn("Uncertainty_3sigma_Gy");
+    man->CreateNtupleDColumn("nEvents");
     man->FinishNtuple(0);
     
     // Fill data for each detector
-    const int nEvents = threadEventCounters[threadID];
+    const int nEvents = fEventCounter;
+    double maxDose = 0.0;
+    double maxDosePerParticle = 0.0;
+    double maxDose3sigma = 0.0;
+    
     for (const auto& pair : energyDepositMap) {
       int copyNumber = pair.first;
-      double totalEnergy = pair.second;
-      double energyPerParticle = (nEvents > 0) ? totalEnergy / nEvents : 0.0;
-      double eventEnergySquared = cuadraticEnergyDepositMap[copyNumber];
-      double quadricEnergyPerParticle = (nEvents > 0) ? eventEnergySquared / nEvents : 0.0;
       
-      // Standard deviation of the mean: σ_mean = sqrt((⟨E²⟩ - ⟨E⟩²) / N)
-      double variance = quadricEnergyPerParticle - std::pow(energyPerParticle, 2);
-      double three_sigma = 3.0 * std::sqrt(std::max(0.0, variance) / nEvents);
+      // Energy in Joules -> Dose in Gy (J/kg)
+      double totalEnergy_J = pair.second;
+      double totalDose_Gy = totalEnergy_J / fDetectorMass;
+      double dosePerParticle_Gy = (nEvents > 0) ? totalDose_Gy / nEvents : 0.0;
       
-      double x = xposition[copyNumber];
-      double y = yposition[copyNumber];
-      double z = zposition[copyNumber];
+      // Variance calculation for dose
+      double energySquaredSum = cuadraticEnergyDepositMap[copyNumber];
+      double doseSquaredSum = energySquaredSum / (fDetectorMass * fDetectorMass);
+      double meanDoseSquared = (nEvents > 0) ? doseSquaredSum / nEvents : 0.0;
+      
+      // Standard deviation of the mean: σ_mean = sqrt((⟨D²⟩ - ⟨D⟩²) / N)
+      double variance = meanDoseSquared - std::pow(dosePerParticle_Gy, 2);
+      double three_sigma_Gy = 3.0 * std::sqrt(std::max(0.0, variance) / nEvents);
+      
+      // Track max dose and its statistics
+      if (totalDose_Gy > maxDose) {
+        maxDose = totalDose_Gy;
+        maxDosePerParticle = dosePerParticle_Gy;
+        maxDose3sigma = three_sigma_Gy;
+      }
       
       man->FillNtupleDColumn(0, 0, copyNumber);
-      man->FillNtupleDColumn(0, 1, x);
-      man->FillNtupleDColumn(0, 2, y);
-      man->FillNtupleDColumn(0, 3, z);
-      man->FillNtupleDColumn(0, 4, totalEnergy);
-      man->FillNtupleDColumn(0, 5, energyPerParticle);
-      man->FillNtupleDColumn(0, 6, eventEnergySquared);
-      man->FillNtupleDColumn(0, 7, quadricEnergyPerParticle);
-      man->FillNtupleDColumn(0, 8, three_sigma);
+      man->FillNtupleDColumn(0, 1, xposition[copyNumber]);
+      man->FillNtupleDColumn(0, 2, yposition[copyNumber]);
+      man->FillNtupleDColumn(0, 3, zposition[copyNumber]);
+      man->FillNtupleDColumn(0, 4, totalDose_Gy);
+      man->FillNtupleDColumn(0, 5, dosePerParticle_Gy);
+      man->FillNtupleDColumn(0, 6, doseSquaredSum);
+      man->FillNtupleDColumn(0, 7, meanDoseSquared);
+      man->FillNtupleDColumn(0, 8, three_sigma_Gy);
       man->FillNtupleDColumn(0, 9, nEvents);
       man->AddNtupleRow(0);
     }
@@ -134,11 +152,19 @@ void MySensitiveDetector::EndOfEvent(G4HCofThisEvent*)
     man->Write();
     man->CloseFile();
     
-    // Log progress
-    G4cout << "=== Dose Scoring Progress ===" << G4endl;
-    G4cout << "  ThreadID: " << threadID << G4endl;
-    G4cout << "  Events processed: " << nEvents << G4endl;
-    G4cout << "  Detectors with hits: " << energyDepositMap.size() << G4endl;
-    G4cout << "=============================" << G4endl;
+    // Calculate relative error percentage for max dose
+    double relativeError = (maxDosePerParticle > 0) ? (maxDose3sigma / maxDosePerParticle) * 100.0 : 0.0;
+    
+    // Compact, informative progress log (single output for MT safety)
+    std::ostringstream log;
+    log << "\n+--------------------------------------------------------------------+\n"
+        << "|  GOSS  |  " << std::scientific << std::setprecision(0) << (double)nEvents << " events  |  " 
+        << std::fixed << energyDepositMap.size() << " detectors  |  output.csv  |\n"
+        << "+--------------------------------------------------------------------+\n"
+        << "|  Dose/particle: " << std::scientific << std::setprecision(2) << maxDosePerParticle << " Gy"
+        << "  |  Error: " << std::fixed << std::setprecision(2) << relativeError << "%  |\n"
+        << "+--------------------------------------------------------------------+\n";
+    G4cout << log.str() << G4endl;
   }
 }
+

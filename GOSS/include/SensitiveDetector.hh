@@ -5,7 +5,6 @@
 #include "G4THitsCollection.hh"
 #include <map>
 #include <unordered_map>
-#include <vector>
 
 class G4Step;
 class G4HCofThisEvent;
@@ -14,7 +13,7 @@ class G4HCofThisEvent;
 /// Sensitive detector class for dose scoring
 ///
 /// Accumulates energy deposits per detector volume and periodically
-/// writes results to CSV file with statistical analysis.
+/// writes results to CSV file with dose and statistical analysis.
 
 class MySensitiveDetector : public G4VSensitiveDetector
 {
@@ -30,7 +29,7 @@ class MySensitiveDetector : public G4VSensitiveDetector
 
   private:
     // Energy accumulation maps (thread-local by Geant4 design)
-    std::map<int, G4double> energyDepositMap;           // Total energy per detector
+    std::map<int, G4double> energyDepositMap;           // Total energy per detector [eV]
     std::map<int, G4double> cuadraticEnergyDepositMap;  // Sum of E^2 for variance
     std::map<int, G4double> IndepCuadraticEnergyDepositMap;  // Per-event energy for E^2
     
@@ -40,8 +39,12 @@ class MySensitiveDetector : public G4VSensitiveDetector
     std::map<int, G4double> zposition;
     G4ThreeVector posDetector;
     
-    // Thread event counter
-    std::unordered_map<std::string, int> threadEventCounters;
+    // Detector mass (same for all detectors, obtained once)
+    G4double fDetectorMass;
+    G4bool fMassInitialized;
+    
+    // Event counter (thread-local by SD instance)
+    G4int fEventCounter;
 };
  
  
