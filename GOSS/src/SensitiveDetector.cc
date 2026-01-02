@@ -68,7 +68,7 @@ void MySensitiveDetector::EndOfEvent(G4HCofThisEvent*)
     std::string threadID = GetThreadID();
   threadEventCounters[threadID]++; 
   
-   if ( threadEventCounters[threadID]% 10 == 0)
+   if ( threadEventCounters[threadID]% 100000 == 0)
    { 
     G4AnalysisManager *man = G4AnalysisManager::Instance();
   

@@ -27,8 +27,8 @@
 /my_beam/Y0   0.2 cm
 /my_beam/DY   4.0 cm
 /my_beam/Z0   0.2 cm
-/my_beam/verbose  2
+/my_beam/verbose  0
 #
-/run/beamOn        10000
+/run/beamOn        10000000
 /run/printProgress  1000
 #
