@@ -31,10 +31,14 @@
 
 #include "IAEAphspRun.hh"
 #include "G4IAEAphspWriterStack.hh"
+ 
 
 
 void SteppingAction::UserSteppingAction(const G4Step* aStep)
 {
+     G4VAnalysisManager *man = G4AnalysisManager::Instance();
+    G4LogicalVolume *volume = aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
+    
   const IAEAphspRun* aRun =
     static_cast<const IAEAphspRun*>( G4RunManager::GetRunManager()
 				     ->GetCurrentRun() );

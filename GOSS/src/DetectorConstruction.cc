@@ -110,7 +110,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
 
 //& Número de detectores en cada fila y columna d
-G4int numDetectors =  1; // 23;  
+G4int numDetectors = 40; // 23;  
 
 G4int outerNumDetectors =0  ; //31;
 //& Separación
@@ -133,7 +133,7 @@ G4double profundidadGrupo= 15*cm;
   solidDetector = new G4Box("solidDetector", SDiodeX/2, SDiodeY/2, SDiodeZ/2);
 
 // Crear el volumen lógico del detector
-  logicDetector = new G4LogicalVolume(solidDetector,fWorldMat, "logicDetector");
+  logicDetector = new G4LogicalVolume(solidDetector,fDetectordMat, "logicDetector");
     G4int ndet =1;
 // Colocar los detectores en la cuadrícula y capas
 for(G4int layer = 0; layer < numLayers; layer++) {
@@ -167,8 +167,7 @@ for(G4int layer = 0; layer < numLayers; layer++) {
 
 void DetectorConstruction::ConstructSDandField(){ 
 auto sensDet = new MySensitiveDetector("SensitiveDetector", "TrackerHitsCollection");
- G4SDManager::GetSDMpointer()->AddNewDetector(sensDet);
-    if(logicDetector != NULL)
+ G4SDManager::GetSDMpointer()->AddNewDetector(sensDet); 
   logicDetector->SetSensitiveDetector(sensDet);// logicmosfet es diodo. logic detector es mosfet solo en prototipo 4
 }
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

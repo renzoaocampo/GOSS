@@ -28,6 +28,11 @@
 #define ActionInitialization_h 1
 
 
+#include "PrimaryGeneratorAction.hh"
+#include "RunAction.hh"
+#include "event.hh"
+#include "SteppingAction.hh"
+#include "TrackingAction.hh"
 #include "G4VUserActionInitialization.hh"
 #include "globals.hh"
 

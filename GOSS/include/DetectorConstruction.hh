@@ -61,11 +61,16 @@ public:
 
   G4VPhysicalVolume* Construct() override;
 
+    G4LogicalVolume *GetScoringVolume() const { return fScoringVolume; }
+
+
   void DumpGeometryParameters();
 
   inline void SetWorldXY(G4double val)   { fWorldXY = val; }
   inline void SetWorldZ(G4double val)    { fWorldZ = val; }
 
+ 
+    
 
 private:  
 
@@ -79,6 +84,7 @@ private:
     virtual void ConstructSDandField();
 
     G4LogicalVolume *fScoringVolume;
+
 };
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

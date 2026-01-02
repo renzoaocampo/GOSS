@@ -68,7 +68,7 @@ void MySensitiveDetector::EndOfEvent(G4HCofThisEvent*)
     std::string threadID = GetThreadID();
   threadEventCounters[threadID]++; 
   
-   if ( threadEventCounters[threadID]% 200 == 0)
+   if ( threadEventCounters[threadID]% 10 == 0)
    { 
     G4AnalysisManager *man = G4AnalysisManager::Instance();
   
@@ -78,7 +78,7 @@ void MySensitiveDetector::EndOfEvent(G4HCofThisEvent*)
         std::string fileName = "output.csv";
 
   man->OpenFile(fileName);
-    // man->CreateNtuple(("seed");
+    man->CreateNtuple("seed","seed");
     man->CreateNtupleDColumn("Detector_Number");
      man->CreateNtupleDColumn("x");
     man->CreateNtupleDColumn("y");

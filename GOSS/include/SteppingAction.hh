@@ -28,19 +28,24 @@
 #define SteppingAction_h 1
 
 #include "G4UserSteppingAction.hh"
+#include "G4Step.hh"
+#include "DetectorConstruction.hh"
+#include "event.hh" 
 
 class G4Step;
-
+class MyEventAction;
 
 class SteppingAction: public G4UserSteppingAction
 {
 public:
-  SteppingAction() = default;
-
-  virtual ~SteppingAction() override = default;
+    SteppingAction() = default;
+    ~SteppingAction() override = default;
 
   // To store eligible particles in the IAEAphspWriterstack
   virtual void UserSteppingAction(const G4Step* step) override;
+    
+private:
+    MyEventAction *fEventAction ; 
 
 };
 #endif

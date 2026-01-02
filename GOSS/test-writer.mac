@@ -8,8 +8,7 @@
 #
 
 /action/IAEAphspWriter/namePrefix  psf_z
-/action/IAEAphspWriter/zphsp       50.1 cm
-/action/IAEAphspWriter/zphsp       60.5 cm
+/action/IAEAphspWriter/zphsp      10.1 cm 
 #
 /my_geom/worldXY   25.0 cm
 /my_geom/worldZ   100.0 cm
@@ -23,13 +22,13 @@
 /gun/particle  gamma
 /my_beam/kinE    10.0 MeV
 /my_beam/DE       5.0 MeV
-/my_beam/X0   7.0 cm
-/my_beam/DX   2.0 cm
-/my_beam/Y0  -5.0 cm
-/my_beam/DY   1.0 cm
-/my_beam/Z0   0.0 cm
+/my_beam/X0   0.2 cm
+/my_beam/DX   4.0 cm
+/my_beam/Y0   0.2 cm
+/my_beam/DY   4.0 cm
+/my_beam/Z0   0.2 cm
 /my_beam/verbose  2
 #
-/run/beamOn        3000000
+/run/beamOn        10000
 /run/printProgress  1000
 #

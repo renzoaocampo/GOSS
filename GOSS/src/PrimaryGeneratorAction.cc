@@ -121,25 +121,25 @@ void PrimaryGeneratorAction::GeneratePrimaries(G4Event* anEvent)
 
     fParticleGun->SetParticleMomentumDirection( G4ThreeVector(ux,uy,uz) );
 
-    // if(fVerbose > 1) {
-    //   G4ParticleDefinition* particle = fParticleGun->GetParticleDefinition();
-    //   G4String particleName = particle->GetParticleName();
-    //   G4cout << G4endl
-	  //    << "Event # " << fCounter
-	  //    << "  ParticleGun vertex:  "
-	  //    << "ParticleName = " << particleName
-	  //    << "   PDGcode = " << particle->GetPDGEncoding()
-	  //    << G4endl;
-    //   G4cout << std::setprecision(6)
-	  //    << "\t\t KinEnergy (MeV) = " << kinEnergy/MeV
-	  //    << "   weight = " << fParticleGun->GetParticleWeight()
-	  //    << G4endl
-	  //    << "\t\t x (cm) = "  << x/cm
-	  //    << "  y (cm) = "   << y/cm
-	  //    << "  z (cm) = "   << z/cm
-	  //    << "    ux = " << ux << "  uy = " << uy << "  uz = " << uz
-	  //    << G4endl;
-    // }
+    if(fVerbose > 1) {
+      G4ParticleDefinition* particle = fParticleGun->GetParticleDefinition();
+      G4String particleName = particle->GetParticleName();
+      G4cout << G4endl
+	     << "Event # " << fCounter
+	     << "  ParticleGun vertex:  "
+	     << "ParticleName = " << particleName
+	     << "   PDGcode = " << particle->GetPDGEncoding()
+	     << G4endl;
+      G4cout << std::setprecision(6)
+	     << "\t\t KinEnergy (MeV) = " << kinEnergy/MeV
+	     << "   weight = " << fParticleGun->GetParticleWeight()
+	     << G4endl
+	     << "\t\t x (cm) = "  << x/cm
+	     << "  y (cm) = "   << y/cm
+	     << "  z (cm) = "   << z/cm
+	     << "    ux = " << ux << "  uy = " << uy << "  uz = " << uz
+	     << G4endl;
+    }
 
     fParticleGun->GeneratePrimaryVertex(anEvent);
   }

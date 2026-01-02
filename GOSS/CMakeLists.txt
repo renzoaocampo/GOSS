@@ -3,6 +3,11 @@
 cmake_minimum_required(VERSION 3.16)
 project(IAEAphsp LANGUAGES CXX)
 
+# Forzar build type Debug si no está definido
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type" FORCE)
+endif()
+
 
 #----------------------------------------------------------------------------
 # Find Geant4 package, activating all available UI and Vis drivers by default

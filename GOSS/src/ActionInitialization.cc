@@ -94,7 +94,14 @@ void ActionInitialization::Build() const
     // Set G4IAEAphspWriterStack object for the local thread
     // and register zphsp values to it
     runAct->SetIAEAphspWriterStack(fIAEAphspWriterNamePrefix);
+    
 
+  MyEventAction *eventAction = new MyEventAction( );
+      SetUserAction(eventAction);
+    SteppingAction *steppingAction = new SteppingAction();
+    SetUserAction(steppingAction);
+      TrackingAction *trackingAction = new TrackingAction();
+SetUserAction(trackingAction);
     if (fZphspVec->size() > 0) {
       for (const auto& zphsp : (*fZphspVec))
 	runAct->AddZphsp(zphsp);
@@ -108,11 +115,7 @@ void ActionInitialization::Build() const
     }
   }
   SetUserAction(runAct);
-
-  SteppingAction *steppingAction = new SteppingAction();
-  SetUserAction(steppingAction);
 }
-
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
