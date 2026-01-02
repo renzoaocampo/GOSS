@@ -40,6 +40,12 @@ GOSSMessenger::GOSSMessenger()
   fSeedCmd->SetGuidance("Use any integer value.");
   fSeedCmd->SetParameterName("seed", false);
   fSeedCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
+  
+  // Initialize with automatic random seed (can be overridden by /goss/seed)
+  auto now = std::chrono::high_resolution_clock::now();
+  fSeed = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+  G4Random::setTheSeed(fSeed);
+  G4cout << "GOSS: Auto seed = " << fSeed << " (use /goss/seed to override)" << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

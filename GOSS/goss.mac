@@ -16,9 +16,16 @@
 #================================================
 # GOSS Dose Scoring Configuration
 #================================================
-/goss/saveInterval  1000000
+/goss/saveInterval  88888
 /goss/outputFile    dose_results
-# /goss/seed        12345    # Uncomment to set fixed seed
+/goss/seed        12345    # Uncomment to set fixed seed
+
+# Multi-threading (must be before /run/initialize)
+/run/numberOfThreads 4
+ 
+
+
+
  
 /run/initialize
  

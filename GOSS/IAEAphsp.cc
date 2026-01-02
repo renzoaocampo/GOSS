@@ -51,8 +51,6 @@
 #include "ActionInitialization.hh"
 #include "GOSSMessenger.hh"
 
-#include <chrono>
-
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 int main(int argc,char** argv) {
@@ -64,17 +62,11 @@ int main(int argc,char** argv) {
   //choose the Random engine
   G4Random::setTheEngine(new CLHEP::RanecuEngine);
 
-  // Construct the default run manager
+  // Construct the run manager
 #ifdef G4MULTITHREADED
-  G4MTRunManager* runManager = new G4MTRunManager;
-  G4int nThreads = 3;
-  if (argc == 3)
-    nThreads = G4UIcommand::ConvertToInt(argv[2]);
-  runManager->SetNumberOfThreads(nThreads);
-  G4cout << "===== IAEAphsp started with "
-         <<  runManager->GetNumberOfThreads() << " threads =====" << G4endl;
+  auto runManager = new G4MTRunManager;
 #else
-  G4RunManager* runManager = new G4RunManager();
+  auto runManager = new G4RunManager;
 #endif
 
   //set mandatory initialization classes
@@ -85,14 +77,9 @@ int main(int argc,char** argv) {
   runManager->SetUserInitialization(new ActionInitialization());
   
   // GOSS Messenger for dose scoring configuration
+  // Handles: /goss/saveInterval, /goss/outputFile, /goss/seed
   GOSSMessenger* gossMessenger = new GOSSMessenger();
-  
-  // Set random seed if not configured via /goss/seed
-  // This will be overwritten if user sets /goss/seed in macro
-  auto now = std::chrono::high_resolution_clock::now();
-  auto seed = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
-  G4Random::setTheSeed(seed);
-  G4cout << "GOSS: Default random seed = " << seed << " (use /goss/seed to override)" << G4endl;
+
 
   //initialize visualization
   G4VisManager* visManager = nullptr;
