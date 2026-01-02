@@ -91,7 +91,7 @@ int main(int argc,char** argv) {
    //interactive mode
    visManager = new G4VisExecutive;
    visManager->Initialize();
-   UImanager->ApplyCommand("/control/execute ../../test-writer.mac");
+   UImanager->ApplyCommand("/control/execute");
    ui->SessionStart();
    delete ui;
   }
