@@ -1,5 +1,6 @@
 #include "G4UnitsTable.hh"
 #include "SensitiveDetector.hh"
+#include "GOSSMessenger.hh"
 #include "G4HCofThisEvent.hh"
 #include "G4Step.hh"
 #include "G4ThreeVector.hh"
@@ -82,14 +83,15 @@ void MySensitiveDetector::EndOfEvent(G4HCofThisEvent*)
   
   fEventCounter++;
   
-  // Write output every 1M events
-  if (fEventCounter % 1000000 == 0) {
+  // Write output at configured interval
+  G4int saveInterval = GOSSMessenger::GetSaveInterval();
+  if (fEventCounter % saveInterval == 0) {
     G4AnalysisManager* man = G4AnalysisManager::Instance();
     
     // Delete previous ntuple and recreate (intentional overwrite)
     man->DeleteNtuple(0, true);
     
-    std::string fileName = "output.csv";
+    std::string fileName = GOSSMessenger::GetOutputFileName() + ".csv";
     man->OpenFile(fileName);
     
     // Create ntuple structure - DOSE in Gy

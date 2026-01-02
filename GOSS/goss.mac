@@ -1,19 +1,30 @@
 #================================================
-# Macro file to test IAEAphsp writer
+# GOSS Example Macro
 #================================================  
 
+# PHSP Writer configuration (optional)
 /action/IAEAphspWriter/namePrefix  psf_z
 /action/IAEAphspWriter/zphsp      10.1 cm 
  
+# World geometry
 /my_geom/worldXY   25.0 cm
 /my_geom/worldZ   100.0 cm
  
+# Physics
 /my_phys/setList  EMStandardPhysics_option4
+
+#================================================
+# GOSS Dose Scoring Configuration
+#================================================
+/goss/saveInterval  1000000
+/goss/outputFile    dose_results
+# /goss/seed        12345    # Uncomment to set fixed seed
  
 /run/initialize
  
 /run/setCut          0.1 mm
-#
+
+# Beam configuration
 /gun/particle  gamma
 /my_beam/kinE    10.0 MeV
 /my_beam/DE       5.0 MeV
@@ -24,6 +35,4 @@
 /my_beam/Z0   0.2 cm
 /my_beam/verbose  0
  
-
 /run/beamOn        100000000
- 

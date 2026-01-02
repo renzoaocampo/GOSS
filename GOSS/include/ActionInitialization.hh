@@ -56,8 +56,11 @@ public:
 
   void SetIAEAphspReader(const G4String& name);
   void SetIAEAphspWriterPrefix(const G4String& name);
-
   void AddZphsp(const G4double val);
+  
+  // GOSS commands
+  void SetSaveInterval(G4int interval);
+  static G4int GetSaveInterval() { return fSaveInterval; }
 
 
 private:
@@ -70,6 +73,9 @@ private:
 
   // Messenger class needed for IAEAphsp commands
   ActionInitializationMessenger* fMessenger;
+  
+  // GOSS save interval (static for access from SensitiveDetector)
+  static G4int fSaveInterval;
 
 };
 

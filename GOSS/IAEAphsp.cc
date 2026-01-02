@@ -49,6 +49,9 @@
 #include "DetectorConstruction.hh"
 #include "PhysicsList.hh"
 #include "ActionInitialization.hh"
+#include "GOSSMessenger.hh"
+
+#include <chrono>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -80,6 +83,16 @@ int main(int argc,char** argv) {
 
   // set user action classes
   runManager->SetUserInitialization(new ActionInitialization());
+  
+  // GOSS Messenger for dose scoring configuration
+  GOSSMessenger* gossMessenger = new GOSSMessenger();
+  
+  // Set random seed if not configured via /goss/seed
+  // This will be overwritten if user sets /goss/seed in macro
+  auto now = std::chrono::high_resolution_clock::now();
+  auto seed = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+  G4Random::setTheSeed(seed);
+  G4cout << "GOSS: Default random seed = " << seed << " (use /goss/seed to override)" << G4endl;
 
   //initialize visualization
   G4VisManager* visManager = nullptr;
@@ -104,6 +117,7 @@ int main(int argc,char** argv) {
 
   //job termination
   if (visManager) delete visManager;
+  delete gossMessenger;
   delete runManager;
 }
 
