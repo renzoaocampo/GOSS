@@ -72,7 +72,6 @@ ActionInitialization::~ActionInitialization()
 
 void ActionInitialization::BuildForMaster() const
 {
-  // G4cout << "ActionInitialization::BuildForMaster() started" << G4endl;
   SetUserAction(new RunAction());
 }
 
@@ -80,28 +79,24 @@ void ActionInitialization::BuildForMaster() const
 
 void ActionInitialization::Build() const
 {
-  // G4cout << "ActionInitialization::Build() started" << G4endl;
   G4cout << "IAEAphsp file to read is \"" << fIAEAphspReaderName << "\"."
 	 << G4endl;
 
   PrimaryGeneratorAction* prim = new PrimaryGeneratorAction(fNumberOfThreads);
-  if ( !fIAEAphspReaderName.empty() )   // never true in sequential mode
+  if ( !fIAEAphspReaderName.empty() )
     prim->SetIAEAphspReader(fIAEAphspReaderName);
   SetUserAction(prim);
 
   RunAction* runAct = new RunAction();
-  if (fIAEAphspWriterNamePrefix != "") {  // never true in sequential mode
+  
+  // SteppingAction is always needed for IAEAphsp writer
+  SetUserAction(new SteppingAction());
+  
+  if (fIAEAphspWriterNamePrefix != "") {
     // Set G4IAEAphspWriterStack object for the local thread
     // and register zphsp values to it
     runAct->SetIAEAphspWriterStack(fIAEAphspWriterNamePrefix);
-    
 
-  MyEventAction *eventAction = new MyEventAction( );
-      SetUserAction(eventAction);
-    SteppingAction *steppingAction = new SteppingAction();
-    SetUserAction(steppingAction);
-      TrackingAction *trackingAction = new TrackingAction();
-SetUserAction(trackingAction);
     if (fZphspVec->size() > 0) {
       for (const auto& zphsp : (*fZphspVec))
 	runAct->AddZphsp(zphsp);

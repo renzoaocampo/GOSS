@@ -36,9 +36,7 @@
 
 void SteppingAction::UserSteppingAction(const G4Step* aStep)
 {
-     G4VAnalysisManager *man = G4AnalysisManager::Instance();
-    G4LogicalVolume *volume = aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
-    
+  // Store particles to IAEAphsp files if a writer stack is defined
   const IAEAphspRun* aRun =
     static_cast<const IAEAphspRun*>( G4RunManager::GetRunManager()
 				     ->GetCurrentRun() );

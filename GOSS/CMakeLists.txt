@@ -52,7 +52,8 @@ target_link_libraries(IAEAphsp iaea_phsp ${Geant4_LIBRARIES})
 # relies on these scripts being in the current working directory.
 #
 set(IAEAphsp_SCRIPTS
-    test-reader.mac test-writer.mac test-rw.mac test-rw.out vis.mac
+    goss.mac
+    macros/test-reader.mac macros/test-writer.mac macros/test-rw.mac macros/vis.mac
     phsp/test.IAEAheader phsp/test.IAEAphsp
     phsp/PSF_example.IAEAheader phsp/PSF_example.IAEAphsp
   )

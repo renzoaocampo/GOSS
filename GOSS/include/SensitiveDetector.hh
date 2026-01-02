@@ -2,20 +2,19 @@
 #define SENSITIVEDETECTOR_HH
  
 #include "G4VSensitiveDetector.hh"
-
-#include "TrackerHit.hh"
+#include "G4THitsCollection.hh"
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 class G4Step;
 class G4HCofThisEvent;
 
  
-/// Tracker sensitive detector class
+/// Sensitive detector class for dose scoring
 ///
-/// The hits are accounted in hits in ProcessHits() function which is called
-/// by Geant4 kernel at each step. A hit is created with each step with non zero
-/// energy deposit.
+/// Accumulates energy deposits per detector volume and periodically
+/// writes results to CSV file with statistical analysis.
 
 class MySensitiveDetector : public G4VSensitiveDetector
 {
@@ -30,16 +29,19 @@ class MySensitiveDetector : public G4VSensitiveDetector
     void   EndOfEvent(G4HCofThisEvent* hitCollection) override;
 
   private:
-    TrackerHitsCollection* fHitsCollection;
-           std::map<int, G4double> energyDepositMap;
-           std::map<int, G4double> cuadraticEnergyDepositMap;
-           std::map<int, G4double> IndepCuadraticEnergyDepositMap;
-    std::map<int, G4int> primaryParticleCountMap;
-    std::unordered_map<std::string, int> threadEventCounters;
-        std::map<int, G4double> xposition;
-     std::map<int, G4double> yposition;
-     std::map<int, G4double> zposition;
+    // Energy accumulation maps (thread-local by Geant4 design)
+    std::map<int, G4double> energyDepositMap;           // Total energy per detector
+    std::map<int, G4double> cuadraticEnergyDepositMap;  // Sum of E^2 for variance
+    std::map<int, G4double> IndepCuadraticEnergyDepositMap;  // Per-event energy for E^2
+    
+    // Position maps
+    std::map<int, G4double> xposition;
+    std::map<int, G4double> yposition;
+    std::map<int, G4double> zposition;
     G4ThreeVector posDetector;
+    
+    // Thread event counter
+    std::unordered_map<std::string, int> threadEventCounters;
 };
  
  

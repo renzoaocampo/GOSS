@@ -166,9 +166,9 @@ for(G4int layer = 0; layer < numLayers; layer++) {
 }
 
 void DetectorConstruction::ConstructSDandField(){ 
-auto sensDet = new MySensitiveDetector("SensitiveDetector", "TrackerHitsCollection");
+auto sensDet = new MySensitiveDetector("SensitiveDetector", "DoseHitsCollection");
  G4SDManager::GetSDMpointer()->AddNewDetector(sensDet); 
-  logicDetector->SetSensitiveDetector(sensDet);// logicmosfet es diodo. logic detector es mosfet solo en prototipo 4
+  logicDetector->SetSensitiveDetector(sensDet);
 }
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
