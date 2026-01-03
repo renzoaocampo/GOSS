@@ -11,6 +11,7 @@ GOSS (Geant4 Orchestrated Scoring Suite) includes configurable geometry and dose
 | `/goss/saveInterval <N>` | Save dose output every N events | 1000000 |
 | `/goss/outputFile <name>` | Output file name (without extension) | output |
 | `/goss/seed <value>` | Random seed (auto if not set) | auto |
+| `/goss/mergeCSV <bool>` | Enable/disable automatic CSV merge | true |
 
 ### World Geometry (`/my_geom/...`)
 
@@ -51,63 +52,90 @@ GOSS (Geant4 Orchestrated Scoring Suite) includes configurable geometry and dose
 
 ---
 
-## Example Macro
+## Dose Calculation Mathematics
 
-```bash
-#================================================
-# Phantom Configuration
-#================================================
-/my_geom/phantom/material    G4_WATER
-/my_geom/phantom/halfSizeX   15 cm
-/my_geom/phantom/halfSizeY   15 cm
-/my_geom/phantom/halfSizeZ   20 cm
-/my_geom/phantom/positionZ   10 cm
+### Per-Thread Calculations (Individual CSV)
 
-#================================================
-# Detector Grid Configuration
-#================================================
-/my_geom/detector/material       G4_Si
-/my_geom/detector/halfSizeX      0.1325 cm
-/my_geom/detector/halfSizeY      0.1325 cm
-/my_geom/detector/halfThickness  0.03 cm
-/my_geom/detector/gridSize       40
-/my_geom/detector/spacing        0.8 cm
-/my_geom/detector/numLayers      5
-/my_geom/detector/layerSpacing   2 cm
-/my_geom/detector/firstLayerZ    15 cm
+For each detector and each event, the SensitiveDetector accumulates:
 
-#================================================
-# GOSS Dose Scoring
-#================================================
-/goss/saveInterval  1000000
-/goss/outputFile    dose_results
+**1. Total Dose (Gy):**
+$$D_{total} = \sum_{i=1}^{N} \frac{E_i}{m}$$
 
-/run/initialize
+Where:
 
-# GPS configuration
-/gps/particle e-
-/gps/energy 6 MeV
-# ...
+- $E_i$ = Energy deposited in event $i$ (Joules)
+- $m$ = Detector mass (kg)
+- $N$ = Total events
 
-/run/beamOn 10000000
-```
+**2. Dose Per Particle (Gy):**
+$$\bar{D} = \frac{D_{total}}{N}$$
+
+**3. Dose Squared Sum (Gy²):**
+
+For statistical uncertainty, we track the sum of squared per-event doses:
+$$S = \sum_{i=1}^{N} d_i^2$$
+
+Where $d_i = E_i / m$ is the dose deposited in event $i$.
+
+**4. Mean Dose Squared (Gy²):**
+$$\langle D^2 \rangle = \frac{S}{N}$$
+
+**5. 3-Sigma Uncertainty (Gy):**
+
+Using the standard error of the mean:
+$$\sigma_{\bar{D}} = \sqrt{\frac{\langle D^2 \rangle - \bar{D}^2}{N}}$$
+
+The 3σ uncertainty (99.7% confidence interval):
+$$U_{3\sigma} = 3 \cdot \sigma_{\bar{D}} = 3 \sqrt{\frac{\langle D^2 \rangle - \bar{D}^2}{N}}$$
 
 ---
 
-## Output Format
+### Merged Calculations (Multi-Thread)
 
-CSV file with columns:
+When merging CSV files from multiple threads, values are combined as follows:
 
-| Column | Description | Units |
-|--------|-------------|-------|
-| Detector_Number | Copy number | - |
-| x_cm, y_cm, z_cm | Position | cm |
-| Total_Dose_Gy | Accumulated dose | Gy |
-| Dose_Per_Particle_Gy | Dose per primary | Gy |
-| Dose_Squared_Sum | Σ(D²) | Gy² |
-| Mean_Dose_Squared_Gy2 | ⟨D²⟩ | Gy² |
-| Uncertainty_3sigma_Gy | 3σ uncertainty | Gy |
-| nEvents | Events processed | - |
+**Summable quantities (directly added):**
+
+- `Total_Dose_Gy`: $D_{merged} = \sum_{t} D_t$
+- `Dose_Squared_Sum`: $S_{merged} = \sum_{t} S_t$
+- `nEvents`: $N_{merged} = \sum_{t} N_t$
+
+**Recalculated quantities:**
+
+**1. Merged Dose Per Particle:**
+$$\bar{D}_{merged} = \frac{D_{merged}}{N_{merged}}$$
+
+**2. Merged 3-Sigma Uncertainty:**
+$$U_{3\sigma,merged} = 3 \sqrt{\frac{S_{merged}/N_{merged} - (D_{merged}/N_{merged})^2}{N_{merged}}}$$
+
+Expanding:
+$$U_{3\sigma,merged} = 3 \sqrt{\frac{S_{merged} - D_{merged}^2 / N_{merged}}{N_{merged}^2}}$$
+
+---
+
+## Output Files
+
+### Per-Thread CSV Columns
+
+| Column | Symbol | Formula | Units |
+|--------|--------|---------|-------|
+| `Detector_Number` | - | Copy number | - |
+| `x_cm, y_cm, z_cm` | $(x,y,z)$ | Position | cm |
+| `Total_Dose_Gy` | $D_{total}$ | $\sum E_i / m$ | Gy |
+| `Dose_Per_Particle_Gy` | $\bar{D}$ | $D_{total} / N$ | Gy |
+| `Dose_Squared_Sum` | $S$ | $\sum d_i^2$ | Gy² |
+| `Mean_Dose_Squared_Gy2` | $\langle D^2 \rangle$ | $S / N$ | Gy² |
+| `Uncertainty_3sigma_Gy` | $U_{3\sigma}$ | $3\sqrt{(\langle D^2 \rangle - \bar{D}^2)/N}$ | Gy |
+| `nEvents` | $N$ | Event count | - |
+
+### Merged CSV Columns
+
+| Column | Formula |
+|--------|---------|
+| `Total_Dose_Gy` | $\sum_t D_t$ |
+| `Dose_Per_Particle_Gy` | $D_{merged} / N_{merged}$ |
+| `Uncertainty_3sigma_Gy` | See merged formula above |
+| `nEvents` | $\sum_t N_t$ |
 
 ---
 
@@ -127,32 +155,26 @@ CSV file with columns:
 
 ## Automatic CSV Merging
 
+Control via macro:
+
+```bash
+/goss/mergeCSV true   # Enable (default)
+/goss/mergeCSV false  # Disable
+```
+
 When running with multiple threads, each thread produces its own CSV file:
 
 ```
 dose_output_nt_seed_12345_t0.csv
 dose_output_nt_seed_12345_t1.csv
-dose_output_nt_seed_12345_t2.csv
 ...
 ```
 
-At the end of the run, GOSS **automatically merges** these into a single file:
+At the end of the run, GOSS **automatically merges** these into:
 
 ```
 goss_sd_dose_merged.csv
 ```
 
-### Merged Output Columns
-
-| Column | Description |
-|--------|-------------|
-| Detector_Number | Detector ID |
-| x_cm, y_cm, z_cm | Position |
-| Total_Dose_Gy | Combined dose from all threads |
-| Dose_Per_Particle_Gy | Recalculated average |
-| Uncertainty_3sigma_Gy | Recalculated 3σ uncertainty |
-| nEvents | Total events from all threads |
-
 > [!NOTE]
 > The merge happens automatically in the master thread at the end of the run.
-> No manual post-processing is required.
