@@ -27,45 +27,29 @@
 #ifndef PrimaryGeneratorMessenger_h
 #define PrimaryGeneratorMessenger_h 1
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo.....
-
 #include "globals.hh"
 #include "G4UImessenger.hh"
 
 class G4UIdirectory;
 class G4UIcommand;
-class G4UIcmdWithADoubleAndUnit;
 class G4UIcmdWithAnInteger;
-
 class PrimaryGeneratorAction;
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo.....
+/// Messenger for primary generator
+/// Note: Beam configuration is now done via GPS commands (/gps/...)
 
 class PrimaryGeneratorMessenger: public G4UImessenger
 {
 public:
-  
   PrimaryGeneratorMessenger(PrimaryGeneratorAction* gen);
   virtual ~PrimaryGeneratorMessenger() override;
     
   void SetNewValue(G4UIcommand* command, G4String newValue) override;
 
 private:
-  
-  PrimaryGeneratorAction*  fGen;
-
-  G4UIdirectory*             fBeamDir;
-  G4UIcmdWithADoubleAndUnit* fKinECmd;
-  G4UIcmdWithADoubleAndUnit* fDECmd;
-  G4UIcmdWithADoubleAndUnit* fX0Cmd;
-  G4UIcmdWithADoubleAndUnit* fY0Cmd;
-  G4UIcmdWithADoubleAndUnit* fZ0Cmd;
-  G4UIcmdWithADoubleAndUnit* fDXCmd;
-  G4UIcmdWithADoubleAndUnit* fDYCmd;
-  G4UIcmdWithADoubleAndUnit* fDZCmd;
-  G4UIcmdWithAnInteger*      fVerboseCmd;
-
+  PrimaryGeneratorAction* fGen;
+  G4UIdirectory* fBeamDir;
+  G4UIcmdWithAnInteger* fVerboseCmd;
 };
 
 #endif
-

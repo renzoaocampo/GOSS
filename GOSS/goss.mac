@@ -3,8 +3,8 @@
 #================================================  
 
 # PHSP Writer configuration (optional)
-/action/IAEAphspWriter/namePrefix  psf_z
-/action/IAEAphspWriter/zphsp      10.1 cm 
+# /action/IAEAphspWriter/namePrefix  psf_z
+# /action/IAEAphspWriter/zphsp      10.1 cm 
  
 # World geometry
 /my_geom/worldXY   25.0 cm
@@ -16,30 +16,43 @@
 #================================================
 # GOSS Dose Scoring Configuration
 #================================================
-/goss/saveInterval  88888
-/goss/outputFile    dose_results
-/goss/seed        12345    # Uncomment to set fixed seed
+/goss/saveInterval  10
+/goss/outputFile    doseeee
+/goss/seed        12345    # Uncomment for reproducible runs
 
 # Multi-threading (must be before /run/initialize)
-/run/numberOfThreads 4
- 
-
-
-
+/run/numberOfThreads 2
  
 /run/initialize
  
-/run/setCut          0.1 mm
+/run/setCut  0.1 mm
 
-# Beam configuration
-/gun/particle  gamma
-/my_beam/kinE    10.0 MeV
-/my_beam/DE       5.0 MeV
-/my_beam/X0   0.2 cm
-/my_beam/DX   4.0 cm
-/my_beam/Y0   0.2 cm
-/my_beam/DY   4.0 cm
-/my_beam/Z0   0.2 cm
-/my_beam/verbose  0
+#================================================
+# GPS Beam Configuration
+#================================================
+# Tipo de partícula
+/gps/particle e-
+
+# Distribución espacial gaussiana (haz elíptico)
+/gps/pos/type Beam
+/gps/pos/shape Circle
+/gps/pos/centre 0 0 100.05 cm
+/gps/pos/sigma_x 1.0 mm   # cross-plane (Y)
+/gps/pos/sigma_y 2.1  mm  # in-plane (Z)
+# NOTA: en Geant4, X es dirección del haz → dispersión está en Y y Z
+
+# Dirección fija del haz (colimado hacia +X)
+/gps/ang/type beam2d
+/gps/ang/rot2 0 1 0       # define plano para dirección +X
+/gps/ang/sigma_x 1.35 deg
+/gps/ang/sigma_y 1.35 deg
+
  
-/run/beamOn        100000000
+/run/beamOn 1000
+
+
+/vis/open OGL                         # Abrir visualizador OpenGL
+ 
+/vis/drawVolume                       # Dibujar los volúmenes geométricos
+/vis/scene/add/axes                   # Agregar ejes XYZ a la escena
+/vis/scene/add/trajectories smooth    # Dibujar trayectorias suavizadas

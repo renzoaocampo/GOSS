@@ -27,73 +27,46 @@
 #ifndef PrimaryGeneratorAction_h
 #define PrimaryGeneratorAction_h 1
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo.....
-
 #include "G4VUserPrimaryGeneratorAction.hh"
 #include "globals.hh"
 
 class G4Event;
-class G4ParticleGun;
-
+class G4GeneralParticleSource;
 class G4IAEAphspReader;
 class PrimaryGeneratorMessenger;
-class DetectorConstruction;
 
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo.....
+/// Primary generator action using GPS or IAEA phase-space reader
+///
+/// Priority: If IAEA PHSP reader is configured, it takes precedence.
+/// Otherwise, uses G4GeneralParticleSource (configurable via /gps/... commands)
 
 class PrimaryGeneratorAction : public G4VUserPrimaryGeneratorAction
 {
 public:
-
-  // The constructor defines a ParticleGun object, which allows
-  // shooting a beam of particles through the experimental set-up.
-  // It also needs a pointer to G4IAEAphspReader object in case we need to
-  // read particles from an IAEAphsp file
   PrimaryGeneratorAction(const G4int threads);
-
-  //The destructor. It deletes the ParticleGun.
   virtual ~PrimaryGeneratorAction() override;
  
-  //Generates the primary event via the ParticleGun method,
-  // and from the IAEA phase-space file.
   void GeneratePrimaries(G4Event* anEvent) override;
 
-  //Get/Set methods
-  inline void SetKinE(const G4double val)  { fKinE = val; };
-  inline void SetDE(const G4double val)    { fDE = val; };
-  inline void SetX0(const G4double val)  { fX0 = val;};
-  inline void SetY0(const G4double val)  { fY0 = val;};
-  inline void SetZ0(const G4double val)  { fZ0 = val;};
-  inline void SetDX(const G4double val)  { fDX = val;};
-  inline void SetDY(const G4double val)  { fDY = val;};
-  inline void SetDZ(const G4double val)  { fDZ = val;};
-  inline void SetVerbose(const G4int val) { fVerbose = val;};
-
+  // PHSP reader configuration
   void SetIAEAphspReader(const G4String filename);
-
+  inline G4IAEAphspReader* GetIAEAphspReader() const { return fIAEAphspReader; }
+  
+  // Verbose control
+  inline void SetVerbose(const G4int val) { fVerbose = val; }
   inline G4int GetVerbose() const { return fVerbose; }
-  inline G4IAEAphspReader* GetIAEAphspReader() const  {return fIAEAphspReader;}
-
 
 private:
-
-  // Phase space reader
+  // GPS for primary generation (configured via /gps/... commands)
+  G4GeneralParticleSource* fGPS = nullptr;
+  
+  // PHSP reader (takes priority over GPS if configured)
   G4IAEAphspReader* fIAEAphspReader = nullptr;
-  G4int             fThreads;
-  G4String          fIAEAphspReaderName;
+  G4int fThreads;
+  G4String fIAEAphspReaderName;
 
   G4int fVerbose;
   PrimaryGeneratorMessenger* fMessenger;
-  G4ParticleGun* fParticleGun;
-
-  G4int fCounter;
-  G4double fKinE, fDE;
-  G4double fX0, fY0, fZ0;
-  G4double fDX, fDY, fDZ;
-
 };
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 #endif

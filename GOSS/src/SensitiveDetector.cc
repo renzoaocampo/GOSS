@@ -9,8 +9,10 @@
 #include "G4SystemOfUnits.hh"
 #include "G4AnalysisManager.hh"
 #include "G4LogicalVolume.hh"
+#include "G4Threading.hh"
 #include <cmath>
 #include <iomanip>
+#include <sstream>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -91,11 +93,14 @@ void MySensitiveDetector::EndOfEvent(G4HCofThisEvent*)
     // Delete previous ntuple and recreate (intentional overwrite)
     man->DeleteNtuple(0, true);
     
+    // Open file with .csv extension (G4AnalysisManager adds thread suffix automatically)
     std::string fileName = GOSSMessenger::GetOutputFileName() + ".csv";
     man->OpenFile(fileName);
     
-    // Create ntuple structure - DOSE in Gy
-    man->CreateNtuple("dose", "Dose Scoring Results");
+    // Create ntuple with seed in name
+    G4long seed = GOSSMessenger::GetSeed();
+    std::string ntupleName = "seed_" + std::to_string(seed);
+    man->CreateNtuple(ntupleName.c_str(), ntupleName.c_str());
     man->CreateNtupleDColumn("Detector_Number");
     man->CreateNtupleDColumn("x_cm");
     man->CreateNtupleDColumn("y_cm");
@@ -161,10 +166,12 @@ void MySensitiveDetector::EndOfEvent(G4HCofThisEvent*)
     std::ostringstream log;
     log << "\n+--------------------------------------------------------------------+\n"
         << "|  GOSS  |  " << std::scientific << std::setprecision(0) << (double)nEvents << " events  |  " 
-        << std::fixed << energyDepositMap.size() << " detectors  |  output.csv  |\n"
+        << std::fixed << energyDepositMap.size() << " detectors  |  seed:" << seed << "  |\n"
         << "+--------------------------------------------------------------------+\n"
         << "|  Dose/particle: " << std::scientific << std::setprecision(2) << maxDosePerParticle << " Gy"
         << "  |  Error: " << std::fixed << std::setprecision(2) << relativeError << "%  |\n"
+        << "+--------------------------------------------------------------------+\n"
+        << "|  File: " << fileName << "\n"
         << "+--------------------------------------------------------------------+\n";
     G4cout << log.str() << G4endl;
   }
