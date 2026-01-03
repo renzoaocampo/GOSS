@@ -2,6 +2,7 @@
 #include "G4UIdirectory.hh"
 #include "G4UIcmdWithAnInteger.hh"
 #include "G4UIcmdWithAString.hh"
+#include "G4UIcmdWithABool.hh"
 #include "Randomize.hh"
 #include <chrono>
 #include <cstdlib>
@@ -11,6 +12,7 @@ G4int GOSSMessenger::fSaveInterval = 1000000;  // Default: 1M events
 G4String GOSSMessenger::fOutputFileName = "output";  // Default name
 G4long GOSSMessenger::fSeed = 0;
 G4bool GOSSMessenger::fSeedSet = false;
+G4bool GOSSMessenger::fMergeEnabled = true;  // Default: merge enabled
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
@@ -42,8 +44,15 @@ GOSSMessenger::GOSSMessenger()
   fSeedCmd->SetParameterName("seed", false);
   fSeedCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
   
+  // Merge CSV command
+  fMergeCmd = new G4UIcmdWithABool("/goss/mergeCSV", this);
+  fMergeCmd->SetGuidance("Enable/disable automatic CSV merge at end of run.");
+  fMergeCmd->SetGuidance("When enabled, thread CSV files are merged into goss_sd_dose_merged.csv");
+  fMergeCmd->SetGuidance("Default: true");
+  fMergeCmd->SetParameterName("enable", false);
+  fMergeCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
+  
   // Initialize with automatic random seed (can be overridden by /goss/seed)
-  // Use time-based seed, limited to positive range to avoid negative numbers in filenames
   auto now = std::chrono::high_resolution_clock::now();
   auto rawSeed = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
   fSeed = std::abs(rawSeed % 1000000000);  // Limit to 9 digits, always positive
@@ -59,6 +68,7 @@ GOSSMessenger::~GOSSMessenger()
   delete fSaveIntervalCmd;
   delete fOutputFileCmd;
   delete fSeedCmd;
+  delete fMergeCmd;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -76,9 +86,11 @@ void GOSSMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
   else if (command == fSeedCmd) {
     fSeed = fSeedCmd->GetNewIntValue(newValue);
     fSeedSet = true;
-    
-    // Apply the seed to Geant4 random engine
     G4Random::setTheSeed(fSeed);
     G4cout << "GOSS: Random seed set to " << fSeed << G4endl;
+  }
+  else if (command == fMergeCmd) {
+    fMergeEnabled = fMergeCmd->GetNewBoolValue(newValue);
+    G4cout << "GOSS: CSV merge " << (fMergeEnabled ? "ENABLED" : "DISABLED") << G4endl;
   }
 }

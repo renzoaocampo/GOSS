@@ -60,9 +60,8 @@
 #================================================
 /goss/saveInterval  1000
 /goss/outputFile    dose_output
+/goss/mergeCSV      true
 #/goss/seed         12345
-
-# Multi-threading
 /run/numberOfThreads 4
  
 /run/initialize

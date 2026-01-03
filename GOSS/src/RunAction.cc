@@ -34,6 +34,7 @@
 #include "G4IAEAphspWriterStack.hh"
 #include "IAEAphspRun.hh"
 #include "GOSSMerger.hh"
+#include "GOSSMessenger.hh"
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -91,9 +92,10 @@ void RunAction::EndOfRunAction(const G4Run* aRun)
 	iaeaphspWriter->CloseIAEAphspOutFiles();
       }
       
-      // GOSS: Merge CSV files from all threads
-      // TODO: Debug merger - currently causing issues with CSV generation
-      // GOSSMerger::MergeThreadOutputs();
+      // GOSS: Merge CSV files from all threads (if enabled)
+      if (GOSSMessenger::IsMergeEnabled()) {
+        GOSSMerger::MergeThreadOutputs();
+      }
     }
   }
   else {    // sequential mode
