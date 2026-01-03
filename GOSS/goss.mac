@@ -3,8 +3,8 @@
 #================================================  
 
 # PHSP Writer configuration (optional)
-# /action/IAEAphspWriter/namePrefix  psf_z
-# /action/IAEAphspWriter/zphsp      10.1 cm 
+/action/IAEAphspWriter/namePrefix  psf_z
+/action/IAEAphspWriter/zphsp      10.1 cm 
  
 # World geometry
 /my_geom/worldXY   25.0 cm
@@ -16,9 +16,9 @@
 #================================================
 # GOSS Dose Scoring Configuration
 #================================================
-/goss/saveInterval  10
+/goss/saveInterval  100
 /goss/outputFile    doseeee
-/goss/seed        12345    # Uncomment for reproducible runs
+#/goss/seed        12345   
 
 # Multi-threading (must be before /run/initialize)
 /run/numberOfThreads 2
@@ -30,29 +30,38 @@
 #================================================
 # GPS Beam Configuration
 #================================================
-# Tipo de partícula
-/gps/particle e-
-
-# Distribución espacial gaussiana (haz elíptico)
+ 
+/gps/particle e- 
 /gps/pos/type Beam
 /gps/pos/shape Circle
 /gps/pos/centre 0 0 100.05 cm
 /gps/pos/sigma_x 1.0 mm   # cross-plane (Y)
-/gps/pos/sigma_y 2.1  mm  # in-plane (Z)
-# NOTA: en Geant4, X es dirección del haz → dispersión está en Y y Z
-
-# Dirección fija del haz (colimado hacia +X)
+/gps/pos/sigma_y 2.1  mm  # in-plane (Z) 
 /gps/ang/type beam2d
 /gps/ang/rot2 0 1 0       # define plano para dirección +X
 /gps/ang/sigma_x 1.35 deg
-/gps/ang/sigma_y 1.35 deg
+/gps/ang/sigma_y 1.35 deg 
+/gps/ene/type Mono
+/gps/ene/mono 16.6 MeV
+/process/em/setDirectionalSplitting true 
+/process/em/setDirectionalSplittingTarget 0 0 0 cm 
+/process/em/setDirectionalSplittingRadius 29.7 cm 
+/process/em/setSecBiasing eBrem TargetRegion 10 7 MeV 
 
  
-/run/beamOn 1000
+/run/beamOn 10000
 
+#================================================
+# Visualization
+#================================================
+/vis/open OGL
+/vis/drawVolume
+/vis/scene/add/axes
+/vis/scene/add/trajectories smooth
+/vis/scene/add/hits
+/vis/viewer/set/autoRefresh true
+/vis/viewer/flush
+/vis/viewer/zoom 1.5
+/vis/scene/endOfEventAction accumulate
+/vis/scene/endOfRunAction accumulate
 
-/vis/open OGL                         # Abrir visualizador OpenGL
- 
-/vis/drawVolume                       # Dibujar los volúmenes geométricos
-/vis/scene/add/axes                   # Agregar ejes XYZ a la escena
-/vis/scene/add/trajectories smooth    # Dibujar trayectorias suavizadas

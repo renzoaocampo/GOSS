@@ -23,15 +23,6 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
-// Example author: M.A. Cortes-Giraldo, Universidad de Sevilla
-//
-// Reference paper:
-//   M.A. Cortes-Giraldo et al., Int J Radiat Biol 88(1-2): 200-208 (2012)
-//   (doi: 10.3109/09553002.2011.627977)
-//
-// The iaea_phsp routines are available at the IAEAphsp project website:
-//   https://www-nds.iaea.org/phsp/phsp.htmlx
-//
 
 #include "globals.hh"
 #include "Randomize.hh"
@@ -53,13 +44,9 @@
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
-int main(int argc,char** argv) {
+int main(int argc, char** argv) {
 
-  //detect interactive mode (if no arguments) and define UI session
-  G4UIExecutive* ui = nullptr;
-  if (argc == 1) ui = new G4UIExecutive(argc,argv);
-
-  //choose the Random engine
+  // Choose the Random engine
   G4Random::setTheEngine(new CLHEP::RanecuEngine);
 
   // Construct the run manager
@@ -69,42 +56,35 @@ int main(int argc,char** argv) {
   auto runManager = new G4RunManager;
 #endif
 
-  //set mandatory initialization classes
+  // Set mandatory initialization classes
   runManager->SetUserInitialization(new DetectorConstruction());
   runManager->SetUserInitialization(new PhysicsList());
-
-  // set user action classes
   runManager->SetUserInitialization(new ActionInitialization());
   
   // GOSS Messenger for dose scoring configuration
-  // Handles: /goss/saveInterval, /goss/outputFile, /goss/seed
   GOSSMessenger* gossMessenger = new GOSSMessenger();
 
-
-  //initialize visualization
-  G4VisManager* visManager = nullptr;
-
-  //get the pointer to the User Interface manager
+  // UI and Visualization - ALWAYS initialize
+  G4UIExecutive* ui = new G4UIExecutive(argc, argv);
+  G4VisManager* visManager = new G4VisExecutive();
+  visManager->Initialize();
   G4UImanager* UImanager = G4UImanager::GetUIpointer();
 
-  if (ui)  {
-   //interactive mode
-   visManager = new G4VisExecutive;
-   visManager->Initialize();
-   UImanager->ApplyCommand("/control/execute");
-   ui->SessionStart();
-   delete ui;
-  }
-  else  {
-  //batch mode
-   G4String command = "/control/execute ";
-   G4String fileName = argv[1];
-   UImanager->ApplyCommand(command+fileName);
+  // Execute macro if provided
+  if (argc > 1) {
+    G4String command = "/control/execute ";
+    G4String fileName = argv[1];
+    UImanager->ApplyCommand(command + fileName);
   }
 
-  //job termination
-  if (visManager) delete visManager;
+  // Start UI session (allows visualization commands in macro)
+  ui->SessionStart();
+
+  // Job termination
+  delete ui;
+  delete visManager;
   delete gossMessenger;
   delete runManager;
+  
+  return 0;
 }
-
