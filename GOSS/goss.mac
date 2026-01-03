@@ -3,6 +3,12 @@
 #================================================  
 
 #================================================
+# PHSP Writer Configuration (optional)
+#================================================
+/action/IAEAphspWriter/namePrefix  psf_z
+/action/IAEAphspWriter/zphsp      10.1 cm
+
+#================================================
 # World Geometry (half-sizes)
 #================================================
 /my_geom/worldXY   50.0 cm
@@ -17,10 +23,10 @@
 # Half-sizes (full size = 2 * halfSize)
 /my_geom/phantom/halfSizeX   15 cm
 /my_geom/phantom/halfSizeY   15 cm
-/my_geom/phantom/halfSizeZ   20 cm
+/my_geom/phantom/halfSizeZ   10 cm
 
 # Center Z position
-/my_geom/phantom/positionZ   10 cm
+/my_geom/phantom/positionZ   0 cm
 
 #================================================
 # Detector Grid Configuration
@@ -29,20 +35,20 @@
 /my_geom/detector/material       G4_Si
 
 # Individual detector half-sizes
-/my_geom/detector/halfSizeX      0.1325 cm
-/my_geom/detector/halfSizeY      0.1325 cm
-/my_geom/detector/halfThickness  0.03 cm
+/my_geom/detector/halfSizeX      0.3 cm
+/my_geom/detector/halfSizeY      0.3 cm
+/my_geom/detector/halfThickness  0.3 cm
 
 # Grid: 40x40 = 1600 detectors per layer
-/my_geom/detector/gridSize       40
+/my_geom/detector/gridSize       21
 
 # Center-to-center spacing
-/my_geom/detector/spacing        0.8 cm
+/my_geom/detector/spacing        1 cm
 
 # Layers configuration
-/my_geom/detector/numLayers      5
-/my_geom/detector/layerSpacing   2 cm
-/my_geom/detector/firstLayerZ    15 cm
+/my_geom/detector/numLayers     10
+/my_geom/detector/layerSpacing   1 cm
+/my_geom/detector/firstLayerZ    5 cm
 
 #================================================
 # Physics
@@ -52,7 +58,7 @@
 #================================================
 # GOSS Dose Scoring Configuration
 #================================================
-/goss/saveInterval  1000000
+/goss/saveInterval  1000
 /goss/outputFile    dose_output
 #/goss/seed         12345
 
@@ -66,20 +72,16 @@
 #================================================
 # GPS Beam Configuration
 #================================================
-/gps/particle e-
-/gps/pos/type Beam
-/gps/pos/shape Circle
-/gps/pos/centre 0 0 100.05 cm
-/gps/pos/sigma_x 1.0 mm
-/gps/pos/sigma_y 2.1 mm
-/gps/ang/type beam2d
-/gps/ang/rot2 0 1 0
-/gps/ang/sigma_x 1.35 deg
-/gps/ang/sigma_y 1.35 deg
+/gps/particle gamma
 /gps/ene/type Mono
-/gps/ene/mono 16.6 MeV
+/gps/ene/mono 6 MeV
 
-/run/beamOn 10000
+# Point source above phantom, directed towards -Z (towards detectors)
+/gps/pos/type Point
+/gps/pos/centre 0 0 40 cm
+/gps/direction 0 0 -1
+
+/run/beamOn 100000
 
 #================================================
 # Visualization (optional)

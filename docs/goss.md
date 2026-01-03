@@ -122,3 +122,37 @@ CSV file with columns:
 | `G4_Si` | Silicon |
 | `G4_Ge` | Germanium |
 | `G4_AIR` | Air |
+
+---
+
+## Automatic CSV Merging
+
+When running with multiple threads, each thread produces its own CSV file:
+
+```
+dose_output_nt_seed_12345_t0.csv
+dose_output_nt_seed_12345_t1.csv
+dose_output_nt_seed_12345_t2.csv
+...
+```
+
+At the end of the run, GOSS **automatically merges** these into a single file:
+
+```
+goss_sd_dose_merged.csv
+```
+
+### Merged Output Columns
+
+| Column | Description |
+|--------|-------------|
+| Detector_Number | Detector ID |
+| x_cm, y_cm, z_cm | Position |
+| Total_Dose_Gy | Combined dose from all threads |
+| Dose_Per_Particle_Gy | Recalculated average |
+| Uncertainty_3sigma_Gy | Recalculated 3σ uncertainty |
+| nEvents | Total events from all threads |
+
+> [!NOTE]
+> The merge happens automatically in the master thread at the end of the run.
+> No manual post-processing is required.

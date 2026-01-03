@@ -33,6 +33,7 @@
 #include "G4IAEAphspWriter.hh"
 #include "G4IAEAphspWriterStack.hh"
 #include "IAEAphspRun.hh"
+#include "GOSSMerger.hh"
 
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -89,6 +90,10 @@ void RunAction::EndOfRunAction(const G4Run* aRun)
 	// The IAEAphsp files are open at first call of IAEAphspRun::Merge()
 	iaeaphspWriter->CloseIAEAphspOutFiles();
       }
+      
+      // GOSS: Merge CSV files from all threads
+      // TODO: Debug merger - currently causing issues with CSV generation
+      // GOSSMerger::MergeThreadOutputs();
     }
   }
   else {    // sequential mode

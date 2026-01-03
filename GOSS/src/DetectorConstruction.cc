@@ -160,7 +160,7 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   lPhantom->SetVisAttributes(visPhantom);
 
   //============================================
-  // DETECTOR GRID (inside phantom)
+  // DETECTOR GRID (inside phantom - must be daughters of phantom!)
   //============================================
   solidDetector = new G4Box("Detector", fDetectorHalfX, fDetectorHalfY, fDetectorHalfZ);
   logicDetector = new G4LogicalVolume(solidDetector, fDetectorMat, "logicDetector");
@@ -176,13 +176,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
       for (G4int j = 0; j < fDetectorGridN; j++) {
         G4double xPos = -0.5 * (fDetectorGridN - 1) * fDetectorSpacing + i * fDetectorSpacing;
         G4double yPos = -0.5 * (fDetectorGridN - 1) * fDetectorSpacing + j * fDetectorSpacing;
-        G4double zPos = fDetectorFirstLayerZ - layer * fDetectorLayerSpacing;
+        // Z position relative to phantom center (phantom is at fPhantomPosZ)
+        G4double zPos = fDetectorFirstLayerZ - fPhantomPosZ - layer * fDetectorLayerSpacing;
 
         new G4PVPlacement(0,
                           G4ThreeVector(xPos, yPos, zPos),
                           logicDetector,
                           "physDetector",
-                          lWorld,  // Placed in world (detectors can be inside or outside phantom)
+                          lPhantom,  // Placed INSIDE phantom to avoid overlap
                           false,
                           detectorCopyNumber++);
       }
@@ -198,9 +199,11 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
 
 void DetectorConstruction::ConstructSDandField()
 {
+  G4cout << "ConstructSDandField: Setting up sensitive detector..." << G4endl;
   auto sensDet = new MySensitiveDetector("SensitiveDetector", "DoseHitsCollection");
   G4SDManager::GetSDMpointer()->AddNewDetector(sensDet);
   logicDetector->SetSensitiveDetector(sensDet);
+  G4cout << "ConstructSDandField: Sensitive detector attached to logicDetector" << G4endl;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......

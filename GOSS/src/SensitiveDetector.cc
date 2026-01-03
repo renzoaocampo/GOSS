@@ -38,6 +38,12 @@ void MySensitiveDetector::Initialize(G4HCofThisEvent*)
 
 G4bool MySensitiveDetector::ProcessHits(G4Step* aStep, G4TouchableHistory*)
 {
+  static G4int hitCounter = 0;
+  hitCounter++;
+  if (hitCounter <= 5) {
+    G4cout << "ProcessHits called! Hit #" << hitCounter << G4endl;
+  }
+  
   G4double edep = aStep->GetTotalEnergyDeposit();
   if (edep == 0.) return false;
  

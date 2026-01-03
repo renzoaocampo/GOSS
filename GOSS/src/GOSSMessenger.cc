@@ -4,6 +4,7 @@
 #include "G4UIcmdWithAString.hh"
 #include "Randomize.hh"
 #include <chrono>
+#include <cstdlib>
 
 // Static member initialization
 G4int GOSSMessenger::fSaveInterval = 1000000;  // Default: 1M events
@@ -42,8 +43,10 @@ GOSSMessenger::GOSSMessenger()
   fSeedCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
   
   // Initialize with automatic random seed (can be overridden by /goss/seed)
+  // Use time-based seed, limited to positive range to avoid negative numbers in filenames
   auto now = std::chrono::high_resolution_clock::now();
-  fSeed = std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+  auto rawSeed = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+  fSeed = std::abs(rawSeed % 1000000000);  // Limit to 9 digits, always positive
   G4Random::setTheSeed(fSeed);
   G4cout << "GOSS: Auto seed = " << fSeed << " (use /goss/seed to override)" << G4endl;
 }
