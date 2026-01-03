@@ -1,76 +1,124 @@
 # GOSS Dose Scoring
 
-GOSS (Geant4 Orchestrated Scoring Suite) includes a sensitive detector system for dose scoring with configurable output.
+GOSS (Geant4 Orchestrated Scoring Suite) includes configurable geometry and dose scoring.
 
-## Commands
+## Command Reference
 
-All GOSS commands should be placed **before** `/run/initialize` in your macro file.
+### GOSS Commands (`/goss/...`)
 
 | Command | Description | Default |
 |---------|-------------|---------|
 | `/goss/saveInterval <N>` | Save dose output every N events | 1000000 |
-| `/goss/outputFile <name>` | Output file name (without .csv extension) | output |
-| `/goss/seed <value>` | Set random seed (any integer) | auto (time-based) |
+| `/goss/outputFile <name>` | Output file name (without extension) | output |
+| `/goss/seed <value>` | Random seed (auto if not set) | auto |
 
-## Example Usage
+### World Geometry (`/my_geom/...`)
+
+| Command | Description | Default |
+|---------|-------------|---------|
+| `/my_geom/worldXY <value>` | World **half-size** in X and Y | 50 cm |
+| `/my_geom/worldZ <value>` | World **half-size** in Z | 100 cm |
+
+### Phantom Configuration (`/my_geom/phantom/...`)
+
+| Command | Description | Default |
+|---------|-------------|---------|
+| `/my_geom/phantom/material <name>` | NIST material name | G4_WATER |
+| `/my_geom/phantom/halfSizeX <value>` | Phantom **half-size** X | 15 cm |
+| `/my_geom/phantom/halfSizeY <value>` | Phantom **half-size** Y | 15 cm |
+| `/my_geom/phantom/halfSizeZ <value>` | Phantom **half-size** Z (depth/2) | 20 cm |
+| `/my_geom/phantom/positionZ <value>` | Phantom **center** Z position | 0 cm |
+
+> [!NOTE]
+> Full phantom size = 2 × halfSize. Example: `halfSizeX 15 cm` → 30 cm total width.
+
+### Detector Grid (`/my_geom/detector/...`)
+
+| Command | Description | Default |
+|---------|-------------|---------|
+| `/my_geom/detector/material <name>` | NIST material name | G4_Si |
+| `/my_geom/detector/halfSizeX <value>` | Detector **half-size** X | 0.1325 cm |
+| `/my_geom/detector/halfSizeY <value>` | Detector **half-size** Y | 0.1325 cm |
+| `/my_geom/detector/halfThickness <value>` | Detector **half-thickness** (Z) | 0.03 cm |
+| `/my_geom/detector/gridSize <N>` | Detectors per row AND column | 40 |
+| `/my_geom/detector/spacing <value>` | **Center-to-center** spacing | 0.8 cm |
+| `/my_geom/detector/numLayers <N>` | Number of layers | 5 |
+| `/my_geom/detector/layerSpacing <value>` | Z distance between layers | 2 cm |
+| `/my_geom/detector/firstLayerZ <value>` | Z position of first layer | 15 cm |
+
+> [!IMPORTANT]
+> All geometry commands must be placed **before** `/run/initialize`
+
+---
+
+## Example Macro
 
 ```bash
-# GOSS configuration (before /run/initialize)
+#================================================
+# Phantom Configuration
+#================================================
+/my_geom/phantom/material    G4_WATER
+/my_geom/phantom/halfSizeX   15 cm
+/my_geom/phantom/halfSizeY   15 cm
+/my_geom/phantom/halfSizeZ   20 cm
+/my_geom/phantom/positionZ   10 cm
+
+#================================================
+# Detector Grid Configuration
+#================================================
+/my_geom/detector/material       G4_Si
+/my_geom/detector/halfSizeX      0.1325 cm
+/my_geom/detector/halfSizeY      0.1325 cm
+/my_geom/detector/halfThickness  0.03 cm
+/my_geom/detector/gridSize       40
+/my_geom/detector/spacing        0.8 cm
+/my_geom/detector/numLayers      5
+/my_geom/detector/layerSpacing   2 cm
+/my_geom/detector/firstLayerZ    15 cm
+
+#================================================
+# GOSS Dose Scoring
+#================================================
 /goss/saveInterval  1000000
 /goss/outputFile    dose_results
-/goss/seed          12345
 
 /run/initialize
 
-# ... rest of your simulation
-/run/beamOn 100000000
+# GPS configuration
+/gps/particle e-
+/gps/energy 6 MeV
+# ...
+
+/run/beamOn 10000000
 ```
+
+---
 
 ## Output Format
 
-The dose output is saved as a CSV file with the following columns:
+CSV file with columns:
 
 | Column | Description | Units |
 |--------|-------------|-------|
-| Detector_Number | Copy number of the detector | - |
-| x_cm, y_cm, z_cm | Detector position | cm |
-| Total_Dose_Gy | Total accumulated dose | Gy |
-| Dose_Per_Particle_Gy | Dose per primary particle | Gy |
-| Dose_Squared_Sum | Sum of D² for variance | Gy² |
+| Detector_Number | Copy number | - |
+| x_cm, y_cm, z_cm | Position | cm |
+| Total_Dose_Gy | Accumulated dose | Gy |
+| Dose_Per_Particle_Gy | Dose per primary | Gy |
+| Dose_Squared_Sum | Σ(D²) | Gy² |
 | Mean_Dose_Squared_Gy2 | ⟨D²⟩ | Gy² |
-| Uncertainty_3sigma_Gy | 3σ uncertainty of dose/particle | Gy |
-| nEvents | Number of events processed | - |
+| Uncertainty_3sigma_Gy | 3σ uncertainty | Gy |
+| nEvents | Events processed | - |
 
-## Random Seed Behavior
+---
 
-- If `/goss/seed` is **not set**: A random seed based on system time (nanoseconds) is used automatically
-- If `/goss/seed` is **set**: The specified seed is used, allowing reproducible simulations
+## Common NIST Materials
 
-## Progress Output
-
-During simulation, GOSS displays progress every `saveInterval` events:
-
-```
-+--------------------------------------------------------------------+
-|  GOSS  |  1e+06 events  |  192 detectors  |  output.csv  |
-+--------------------------------------------------------------------+
-|  Dose/particle: 7.62e-14 Gy  |  Error: 2.35%  |
-+--------------------------------------------------------------------+
-```
-
-The **Error** shows the relative 3σ uncertainty of the maximum dose detector. When this reaches ~1% or less, you have good statistics.
-
-## Multi-threading
-
-- Each thread maintains its own dose accumulation
-- Output files may be overwritten between threads (intentional per-thread behavior)
-- For combined results, post-process the CSV files or run in single-thread mode
-
-## Detector Configuration
-
-The sensitive detectors are defined in `DetectorConstruction.cc`. Key parameters:
-
-- **Material**: G4_Si (Silicon)
-- **Dimensions**: 0.265 × 0.265 × 0.06 cm per detector
-- **Grid**: 40×40 detectors per layer, 5 layers
-- **Mass**: Automatically calculated from volume and material density
+| Material Name | Description |
+|--------------|-------------|
+| `G4_WATER` | Liquid water |
+| `G4_PMMA` | Acrylic/Lucite |
+| `G4_TISSUE_SOFT_ICRP` | Soft tissue |
+| `G4_BONE_COMPACT_ICRU` | Bone |
+| `G4_Si` | Silicon |
+| `G4_Ge` | Germanium |
+| `G4_AIR` | Air |

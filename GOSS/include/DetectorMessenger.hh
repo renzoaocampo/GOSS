@@ -27,35 +27,69 @@
 #ifndef DetectorMessenger_h
 #define DetectorMessenger_h 1
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo.....
-
 #include "globals.hh"
 #include "G4UImessenger.hh"
 
 class G4UIdirectory;
 class G4UIcommand;
 class G4UIcmdWithADoubleAndUnit;
+class G4UIcmdWithAString;
+class G4UIcmdWithAnInteger;
 
 class DetectorConstruction;
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo.....
+/// Messenger for geometry configuration
+///
+/// Commands:
+/// - /my_geom/worldXY, worldZ - World dimensions
+/// - /my_geom/phantom/... - Phantom configuration
+/// - /my_geom/detector/... - Detector grid configuration
 
-class DetectorMessenger: public G4UImessenger
+class DetectorMessenger : public G4UImessenger
 {
 public:
-  
   DetectorMessenger(DetectorConstruction* geom);
   virtual ~DetectorMessenger() override;
     
   void SetNewValue(G4UIcommand* command, G4String newValue) override;
 
 private:
-  
-  DetectorConstruction*  fGeom;
-  G4UIdirectory*             fGeomDir;
+  DetectorConstruction* fGeom;
+
+  //============================================
+  // Directories
+  //============================================
+  G4UIdirectory* fGeomDir;
+  G4UIdirectory* fPhantomDir;
+  G4UIdirectory* fDetectorDir;
+
+  //============================================
+  // World commands
+  //============================================
   G4UIcmdWithADoubleAndUnit* fWorldXYCmd;
   G4UIcmdWithADoubleAndUnit* fWorldZCmd;
+
+  //============================================
+  // Phantom commands
+  //============================================
+  G4UIcmdWithAString* fPhantomMaterialCmd;
+  G4UIcmdWithADoubleAndUnit* fPhantomHalfXCmd;
+  G4UIcmdWithADoubleAndUnit* fPhantomHalfYCmd;
+  G4UIcmdWithADoubleAndUnit* fPhantomHalfZCmd;
+  G4UIcmdWithADoubleAndUnit* fPhantomPosZCmd;
+
+  //============================================
+  // Detector commands
+  //============================================
+  G4UIcmdWithAString* fDetectorMaterialCmd;
+  G4UIcmdWithADoubleAndUnit* fDetectorHalfXCmd;
+  G4UIcmdWithADoubleAndUnit* fDetectorHalfYCmd;
+  G4UIcmdWithADoubleAndUnit* fDetectorHalfZCmd;
+  G4UIcmdWithAnInteger* fDetectorGridNCmd;
+  G4UIcmdWithADoubleAndUnit* fDetectorSpacingCmd;
+  G4UIcmdWithAnInteger* fDetectorLayersCmd;
+  G4UIcmdWithADoubleAndUnit* fDetectorLayerSpacingCmd;
+  G4UIcmdWithADoubleAndUnit* fDetectorFirstLayerZCmd;
 };
 
 #endif
-

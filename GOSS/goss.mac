@@ -2,26 +2,62 @@
 # GOSS Example Macro
 #================================================  
 
-# PHSP Writer configuration (optional)
-/action/IAEAphspWriter/namePrefix  psf_z
-/action/IAEAphspWriter/zphsp      10.1 cm 
- 
-# World geometry
-/my_geom/worldXY   25.0 cm
-/my_geom/worldZ   100.0 cm
- 
+#================================================
+# World Geometry (half-sizes)
+#================================================
+/my_geom/worldXY   50.0 cm
+/my_geom/worldZ   120.0 cm
+
+#================================================
+# Phantom Configuration
+#================================================
+# Material: Use NIST names (G4_WATER, G4_PMMA, G4_TISSUE_SOFT_ICRP, etc.)
+/my_geom/phantom/material    G4_WATER
+
+# Half-sizes (full size = 2 * halfSize)
+/my_geom/phantom/halfSizeX   15 cm
+/my_geom/phantom/halfSizeY   15 cm
+/my_geom/phantom/halfSizeZ   20 cm
+
+# Center Z position
+/my_geom/phantom/positionZ   10 cm
+
+#================================================
+# Detector Grid Configuration
+#================================================
+# Material
+/my_geom/detector/material       G4_Si
+
+# Individual detector half-sizes
+/my_geom/detector/halfSizeX      0.1325 cm
+/my_geom/detector/halfSizeY      0.1325 cm
+/my_geom/detector/halfThickness  0.03 cm
+
+# Grid: 40x40 = 1600 detectors per layer
+/my_geom/detector/gridSize       40
+
+# Center-to-center spacing
+/my_geom/detector/spacing        0.8 cm
+
+# Layers configuration
+/my_geom/detector/numLayers      5
+/my_geom/detector/layerSpacing   2 cm
+/my_geom/detector/firstLayerZ    15 cm
+
+#================================================
 # Physics
+#================================================
 /my_phys/setList  EMStandardPhysics_option4
 
 #================================================
 # GOSS Dose Scoring Configuration
 #================================================
-/goss/saveInterval  100
-/goss/outputFile    doseeee
-#/goss/seed        12345   
+/goss/saveInterval  1000000
+/goss/outputFile    dose_output
+#/goss/seed         12345
 
-# Multi-threading (must be before /run/initialize)
-/run/numberOfThreads 2
+# Multi-threading
+/run/numberOfThreads 4
  
 /run/initialize
  
@@ -30,29 +66,23 @@
 #================================================
 # GPS Beam Configuration
 #================================================
- 
-/gps/particle e- 
+/gps/particle e-
 /gps/pos/type Beam
 /gps/pos/shape Circle
 /gps/pos/centre 0 0 100.05 cm
-/gps/pos/sigma_x 1.0 mm   # cross-plane (Y)
-/gps/pos/sigma_y 2.1  mm  # in-plane (Z) 
+/gps/pos/sigma_x 1.0 mm
+/gps/pos/sigma_y 2.1 mm
 /gps/ang/type beam2d
-/gps/ang/rot2 0 1 0       # define plano para dirección +X
+/gps/ang/rot2 0 1 0
 /gps/ang/sigma_x 1.35 deg
-/gps/ang/sigma_y 1.35 deg 
+/gps/ang/sigma_y 1.35 deg
 /gps/ene/type Mono
 /gps/ene/mono 16.6 MeV
-/process/em/setDirectionalSplitting true 
-/process/em/setDirectionalSplittingTarget 0 0 0 cm 
-/process/em/setDirectionalSplittingRadius 29.7 cm 
-/process/em/setSecBiasing eBrem TargetRegion 10 7 MeV 
 
- 
 /run/beamOn 10000
 
 #================================================
-# Visualization
+# Visualization (optional)
 #================================================
 /vis/open OGL
 /vis/drawVolume
@@ -64,4 +94,3 @@
 /vis/viewer/zoom 1.5
 /vis/scene/endOfEventAction accumulate
 /vis/scene/endOfRunAction accumulate
-

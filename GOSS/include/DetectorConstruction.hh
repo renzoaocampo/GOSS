@@ -27,8 +27,6 @@
 #ifndef DetectorConstruction_h
 #define DetectorConstruction_h 1
 
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
-
 #include "G4VUserDetectorConstruction.hh"
 #include "globals.hh"
 #include "G4VPhysicalVolume.hh"
@@ -49,44 +47,95 @@ class G4LogicalVolume;
 class G4Material;
 class DetectorMessenger;
 
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
+/// Detector construction with configurable phantom and detector grid
+///
+/// Geometry parameters can be set via UI commands:
+/// - /my_geom/worldXY, /my_geom/worldZ - World dimensions
+/// - /my_geom/phantom/... - Phantom material and dimensions
+/// - /my_geom/detector/... - Detector grid configuration
 
 class DetectorConstruction : public G4VUserDetectorConstruction
 {
 public:
-
   DetectorConstruction();
   virtual ~DetectorConstruction() override;
 
   G4VPhysicalVolume* Construct() override;
 
-    G4LogicalVolume *GetScoringVolume() const { return fScoringVolume; }
-
+  G4LogicalVolume* GetScoringVolume() const { return fScoringVolume; }
 
   void DumpGeometryParameters();
 
-  inline void SetWorldXY(G4double val)   { fWorldXY = val; }
-  inline void SetWorldZ(G4double val)    { fWorldZ = val; }
+  //============================================
+  // World setters
+  //============================================
+  inline void SetWorldXY(G4double val) { fWorldXY = val; }
+  inline void SetWorldZ(G4double val)  { fWorldZ = val; }
 
- 
-    
+  //============================================
+  // Phantom setters
+  //============================================
+  void SetPhantomMaterial(const G4String& materialName);
+  inline void SetPhantomHalfSizeX(G4double val) { fPhantomHalfX = val; }
+  inline void SetPhantomHalfSizeY(G4double val) { fPhantomHalfY = val; }
+  inline void SetPhantomHalfSizeZ(G4double val) { fPhantomHalfZ = val; }
+  inline void SetPhantomPositionZ(G4double val) { fPhantomPosZ = val; }
 
-private:  
+  //============================================
+  // Detector grid setters
+  //============================================
+  void SetDetectorMaterial(const G4String& materialName);
+  inline void SetDetectorHalfSizeX(G4double val) { fDetectorHalfX = val; }
+  inline void SetDetectorHalfSizeY(G4double val) { fDetectorHalfY = val; }
+  inline void SetDetectorHalfSizeZ(G4double val) { fDetectorHalfZ = val; }
+  inline void SetDetectorGridSize(G4int val)     { fDetectorGridN = val; }
+  inline void SetDetectorSpacing(G4double val)   { fDetectorSpacing = val; }
+  inline void SetDetectorNumLayers(G4int val)    { fDetectorNumLayers = val; }
+  inline void SetDetectorLayerSpacing(G4double val) { fDetectorLayerSpacing = val; }
+  inline void SetDetectorFirstLayerZ(G4double val)  { fDetectorFirstLayerZ = val; }
 
-  G4double fWorldXY, fWorldZ;
-  G4Material* fWorldMat, *fDetectordMat;
+private:
+  //============================================
+  // World parameters
+  //============================================
+  G4double fWorldXY;
+  G4double fWorldZ;
+  G4Material* fWorldMat;
+
+  //============================================
+  // Phantom parameters
+  //============================================
+  G4String fPhantomMaterialName;
+  G4Material* fPhantomMat;
+  G4double fPhantomHalfX;      // Half-size in X
+  G4double fPhantomHalfY;      // Half-size in Y
+  G4double fPhantomHalfZ;      // Half-size in Z
+  G4double fPhantomPosZ;       // Center Z position
+
+  //============================================
+  // Detector grid parameters
+  //============================================
+  G4String fDetectorMaterialName;
+  G4Material* fDetectorMat;
+  G4double fDetectorHalfX;     // Detector half-size X
+  G4double fDetectorHalfY;     // Detector half-size Y
+  G4double fDetectorHalfZ;     // Detector half-size Z (thickness/2)
+  G4int fDetectorGridN;        // Number of detectors per row/column
+  G4double fDetectorSpacing;   // Center-to-center spacing
+  G4int fDetectorNumLayers;    // Number of detector layers
+  G4double fDetectorLayerSpacing;  // Z spacing between layers
+  G4double fDetectorFirstLayerZ;   // Z position of first layer
+
+  //============================================
+  // Internal objects
+  //============================================
   DetectorMessenger* fMessenger;
-  
-    G4Box   *solidDetector   ;
-    G4LogicalVolume   *logicDetector  ;
-    G4VPhysicalVolume *physDetector    ;
-    virtual void ConstructSDandField();
+  G4Box* solidDetector;
+  G4LogicalVolume* logicDetector;
+  G4VPhysicalVolume* physDetector;
+  G4LogicalVolume* fScoringVolume;
 
-    G4LogicalVolume *fScoringVolume;
-
+  virtual void ConstructSDandField() override;
 };
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 #endif

@@ -24,53 +24,228 @@
 // ********************************************************************
 //
 
-#include "G4UIdirectory.hh"
-#include "G4UIcmdWithADoubleAndUnit.hh"
-
 #include "DetectorMessenger.hh"
 #include "DetectorConstruction.hh"
+
+#include "G4UIdirectory.hh"
+#include "G4UIcmdWithADoubleAndUnit.hh"
+#include "G4UIcmdWithAString.hh"
+#include "G4UIcmdWithAnInteger.hh"
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 DetectorMessenger::DetectorMessenger(DetectorConstruction* geom)
   : fGeom(geom)
 {
+  //============================================
+  // DIRECTORIES
+  //============================================
   fGeomDir = new G4UIdirectory("/my_geom/");
-  fGeomDir->SetGuidance("Commands to set the geometry");
+  fGeomDir->SetGuidance("Geometry configuration commands.");
 
-  fWorldXYCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/worldXY",this);
-  fWorldXYCmd->SetGuidance("Set XY half-length of the world volume.");
-  fWorldXYCmd->SetParameterName("worldXY",true);
+  fPhantomDir = new G4UIdirectory("/my_geom/phantom/");
+  fPhantomDir->SetGuidance("Phantom geometry configuration.");
+
+  fDetectorDir = new G4UIdirectory("/my_geom/detector/");
+  fDetectorDir->SetGuidance("Detector grid configuration.");
+
+  //============================================
+  // WORLD COMMANDS
+  //============================================
+  fWorldXYCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/worldXY", this);
+  fWorldXYCmd->SetGuidance("Set HALF-SIZE of world in X and Y directions.");
+  fWorldXYCmd->SetGuidance("Example: /my_geom/worldXY 50 cm -> world is 100cm x 100cm");
+  fWorldXYCmd->SetParameterName("worldHalfXY", false);
   fWorldXYCmd->SetUnitCategory("Length");
-  fWorldXYCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
+  fWorldXYCmd->AvailableForStates(G4State_PreInit);
 
-  fWorldZCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/worldZ",this);
-  fWorldZCmd->SetGuidance("Set Z half-length of the world volume.");
-  fWorldZCmd->SetParameterName("worldZ",true);
+  fWorldZCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/worldZ", this);
+  fWorldZCmd->SetGuidance("Set HALF-SIZE of world in Z direction.");
+  fWorldZCmd->SetGuidance("Example: /my_geom/worldZ 100 cm -> world extends -100 to +100 cm");
+  fWorldZCmd->SetParameterName("worldHalfZ", false);
   fWorldZCmd->SetUnitCategory("Length");
-  fWorldZCmd->AvailableForStates(G4State_PreInit, G4State_Idle);
+  fWorldZCmd->AvailableForStates(G4State_PreInit);
+
+  //============================================
+  // PHANTOM COMMANDS
+  //============================================
+  fPhantomMaterialCmd = new G4UIcmdWithAString("/my_geom/phantom/material", this);
+  fPhantomMaterialCmd->SetGuidance("Set phantom material using NIST name.");
+  fPhantomMaterialCmd->SetGuidance("Examples: G4_WATER, G4_PMMA, G4_TISSUE_SOFT_ICRP");
+  fPhantomMaterialCmd->SetParameterName("material", false);
+  fPhantomMaterialCmd->AvailableForStates(G4State_PreInit);
+
+  fPhantomHalfXCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/phantom/halfSizeX", this);
+  fPhantomHalfXCmd->SetGuidance("Set phantom HALF-SIZE in X direction.");
+  fPhantomHalfXCmd->SetGuidance("Full size = 2 * halfSize. Example: 15 cm -> 30 cm total");
+  fPhantomHalfXCmd->SetParameterName("phantomHalfX", false);
+  fPhantomHalfXCmd->SetUnitCategory("Length");
+  fPhantomHalfXCmd->AvailableForStates(G4State_PreInit);
+
+  fPhantomHalfYCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/phantom/halfSizeY", this);
+  fPhantomHalfYCmd->SetGuidance("Set phantom HALF-SIZE in Y direction.");
+  fPhantomHalfYCmd->SetGuidance("Full size = 2 * halfSize. Example: 15 cm -> 30 cm total");
+  fPhantomHalfYCmd->SetParameterName("phantomHalfY", false);
+  fPhantomHalfYCmd->SetUnitCategory("Length");
+  fPhantomHalfYCmd->AvailableForStates(G4State_PreInit);
+
+  fPhantomHalfZCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/phantom/halfSizeZ", this);
+  fPhantomHalfZCmd->SetGuidance("Set phantom HALF-SIZE in Z direction (depth/2).");
+  fPhantomHalfZCmd->SetGuidance("Full depth = 2 * halfSize. Example: 20 cm -> 40 cm total");
+  fPhantomHalfZCmd->SetParameterName("phantomHalfZ", false);
+  fPhantomHalfZCmd->SetUnitCategory("Length");
+  fPhantomHalfZCmd->AvailableForStates(G4State_PreInit);
+
+  fPhantomPosZCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/phantom/positionZ", this);
+  fPhantomPosZCmd->SetGuidance("Set Z position of phantom CENTER.");
+  fPhantomPosZCmd->SetGuidance("Example: 10 cm -> phantom center at z=10cm");
+  fPhantomPosZCmd->SetParameterName("phantomPosZ", false);
+  fPhantomPosZCmd->SetUnitCategory("Length");
+  fPhantomPosZCmd->AvailableForStates(G4State_PreInit);
+
+  //============================================
+  // DETECTOR COMMANDS
+  //============================================
+  fDetectorMaterialCmd = new G4UIcmdWithAString("/my_geom/detector/material", this);
+  fDetectorMaterialCmd->SetGuidance("Set detector material using NIST name.");
+  fDetectorMaterialCmd->SetGuidance("Examples: G4_Si, G4_SILICON_DIOXIDE, G4_Ge");
+  fDetectorMaterialCmd->SetParameterName("material", false);
+  fDetectorMaterialCmd->AvailableForStates(G4State_PreInit);
+
+  fDetectorHalfXCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/detector/halfSizeX", this);
+  fDetectorHalfXCmd->SetGuidance("Set detector HALF-SIZE in X direction.");
+  fDetectorHalfXCmd->SetGuidance("Full size = 2 * halfSize. Example: 0.1325 cm -> 0.265 cm total");
+  fDetectorHalfXCmd->SetParameterName("detHalfX", false);
+  fDetectorHalfXCmd->SetUnitCategory("Length");
+  fDetectorHalfXCmd->AvailableForStates(G4State_PreInit);
+
+  fDetectorHalfYCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/detector/halfSizeY", this);
+  fDetectorHalfYCmd->SetGuidance("Set detector HALF-SIZE in Y direction.");
+  fDetectorHalfYCmd->SetGuidance("Full size = 2 * halfSize. Example: 0.1325 cm -> 0.265 cm total");
+  fDetectorHalfYCmd->SetParameterName("detHalfY", false);
+  fDetectorHalfYCmd->SetUnitCategory("Length");
+  fDetectorHalfYCmd->AvailableForStates(G4State_PreInit);
+
+  fDetectorHalfZCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/detector/halfThickness", this);
+  fDetectorHalfZCmd->SetGuidance("Set detector HALF-THICKNESS (Z direction).");
+  fDetectorHalfZCmd->SetGuidance("Full thickness = 2 * halfThickness. Example: 0.03 cm -> 0.06 cm");
+  fDetectorHalfZCmd->SetParameterName("detHalfZ", false);
+  fDetectorHalfZCmd->SetUnitCategory("Length");
+  fDetectorHalfZCmd->AvailableForStates(G4State_PreInit);
+
+  fDetectorGridNCmd = new G4UIcmdWithAnInteger("/my_geom/detector/gridSize", this);
+  fDetectorGridNCmd->SetGuidance("Set number of detectors per row AND column.");
+  fDetectorGridNCmd->SetGuidance("Total detectors per layer = gridSize^2. Example: 40 -> 1600 detectors/layer");
+  fDetectorGridNCmd->SetParameterName("gridN", false);
+  fDetectorGridNCmd->SetRange("gridN>0");
+  fDetectorGridNCmd->AvailableForStates(G4State_PreInit);
+
+  fDetectorSpacingCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/detector/spacing", this);
+  fDetectorSpacingCmd->SetGuidance("Set CENTER-TO-CENTER spacing between adjacent detectors.");
+  fDetectorSpacingCmd->SetGuidance("Must be >= detector full size. Example: 0.8 cm");
+  fDetectorSpacingCmd->SetParameterName("spacing", false);
+  fDetectorSpacingCmd->SetUnitCategory("Length");
+  fDetectorSpacingCmd->AvailableForStates(G4State_PreInit);
+
+  fDetectorLayersCmd = new G4UIcmdWithAnInteger("/my_geom/detector/numLayers", this);
+  fDetectorLayersCmd->SetGuidance("Set number of detector layers along Z axis.");
+  fDetectorLayersCmd->SetGuidance("Example: 5 -> 5 layers of detector grids");
+  fDetectorLayersCmd->SetParameterName("numLayers", false);
+  fDetectorLayersCmd->SetRange("numLayers>0");
+  fDetectorLayersCmd->AvailableForStates(G4State_PreInit);
+
+  fDetectorLayerSpacingCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/detector/layerSpacing", this);
+  fDetectorLayerSpacingCmd->SetGuidance("Set Z distance between consecutive detector layers.");
+  fDetectorLayerSpacingCmd->SetGuidance("Layers at: firstZ, firstZ-spacing, firstZ-2*spacing, ...");
+  fDetectorLayerSpacingCmd->SetParameterName("layerSpacing", false);
+  fDetectorLayerSpacingCmd->SetUnitCategory("Length");
+  fDetectorLayerSpacingCmd->AvailableForStates(G4State_PreInit);
+
+  fDetectorFirstLayerZCmd = new G4UIcmdWithADoubleAndUnit("/my_geom/detector/firstLayerZ", this);
+  fDetectorFirstLayerZCmd->SetGuidance("Set Z position of the FIRST (shallowest) detector layer.");
+  fDetectorFirstLayerZCmd->SetGuidance("Subsequent layers are at firstZ - n*layerSpacing");
+  fDetectorFirstLayerZCmd->SetParameterName("firstLayerZ", false);
+  fDetectorFirstLayerZCmd->SetUnitCategory("Length");
+  fDetectorFirstLayerZCmd->AvailableForStates(G4State_PreInit);
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 DetectorMessenger::~DetectorMessenger()
 {
+  // Directories
   delete fGeomDir;
+  delete fPhantomDir;
+  delete fDetectorDir;
+
+  // World
   delete fWorldXYCmd;
   delete fWorldZCmd;
-}
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
+  // Phantom
+  delete fPhantomMaterialCmd;
+  delete fPhantomHalfXCmd;
+  delete fPhantomHalfYCmd;
+  delete fPhantomHalfZCmd;
+  delete fPhantomPosZCmd;
+
+  // Detector
+  delete fDetectorMaterialCmd;
+  delete fDetectorHalfXCmd;
+  delete fDetectorHalfYCmd;
+  delete fDetectorHalfZCmd;
+  delete fDetectorGridNCmd;
+  delete fDetectorSpacingCmd;
+  delete fDetectorLayersCmd;
+  delete fDetectorLayerSpacingCmd;
+  delete fDetectorFirstLayerZCmd;
+}
+
+//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
 
 void DetectorMessenger::SetNewValue(G4UIcommand* command, G4String newValue)
 {
+  //============================================
+  // WORLD
+  //============================================
   if (command == fWorldXYCmd)
     fGeom->SetWorldXY(fWorldXYCmd->GetNewDoubleValue(newValue));
-
   else if (command == fWorldZCmd)
     fGeom->SetWorldZ(fWorldZCmd->GetNewDoubleValue(newValue));
+
+  //============================================
+  // PHANTOM
+  //============================================
+  else if (command == fPhantomMaterialCmd)
+    fGeom->SetPhantomMaterial(newValue);
+  else if (command == fPhantomHalfXCmd)
+    fGeom->SetPhantomHalfSizeX(fPhantomHalfXCmd->GetNewDoubleValue(newValue));
+  else if (command == fPhantomHalfYCmd)
+    fGeom->SetPhantomHalfSizeY(fPhantomHalfYCmd->GetNewDoubleValue(newValue));
+  else if (command == fPhantomHalfZCmd)
+    fGeom->SetPhantomHalfSizeZ(fPhantomHalfZCmd->GetNewDoubleValue(newValue));
+  else if (command == fPhantomPosZCmd)
+    fGeom->SetPhantomPositionZ(fPhantomPosZCmd->GetNewDoubleValue(newValue));
+
+  //============================================
+  // DETECTOR
+  //============================================
+  else if (command == fDetectorMaterialCmd)
+    fGeom->SetDetectorMaterial(newValue);
+  else if (command == fDetectorHalfXCmd)
+    fGeom->SetDetectorHalfSizeX(fDetectorHalfXCmd->GetNewDoubleValue(newValue));
+  else if (command == fDetectorHalfYCmd)
+    fGeom->SetDetectorHalfSizeY(fDetectorHalfYCmd->GetNewDoubleValue(newValue));
+  else if (command == fDetectorHalfZCmd)
+    fGeom->SetDetectorHalfSizeZ(fDetectorHalfZCmd->GetNewDoubleValue(newValue));
+  else if (command == fDetectorGridNCmd)
+    fGeom->SetDetectorGridSize(fDetectorGridNCmd->GetNewIntValue(newValue));
+  else if (command == fDetectorSpacingCmd)
+    fGeom->SetDetectorSpacing(fDetectorSpacingCmd->GetNewDoubleValue(newValue));
+  else if (command == fDetectorLayersCmd)
+    fGeom->SetDetectorNumLayers(fDetectorLayersCmd->GetNewIntValue(newValue));
+  else if (command == fDetectorLayerSpacingCmd)
+    fGeom->SetDetectorLayerSpacing(fDetectorLayerSpacingCmd->GetNewDoubleValue(newValue));
+  else if (command == fDetectorFirstLayerZCmd)
+    fGeom->SetDetectorFirstLayerZ(fDetectorFirstLayerZCmd->GetNewDoubleValue(newValue));
 }
-
-
-//....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo....
-
