@@ -177,7 +177,7 @@ void LinacInfinityGeometry::ConstructFlatteningFilter(G4LogicalVolume* worldLogi
     G4double filterRmax2 = 4.0 * cm;  // base (top, toward patient)
     
     // Positions (inverted: source now at Z=0)
-    G4double filterZ = 15.9 * cm;
+    G4double filterZ = 15.4 * cm;
     G4double discZ = filterZ + (discThickness / 2 + filterHeight / 2);
     
     // Create disc

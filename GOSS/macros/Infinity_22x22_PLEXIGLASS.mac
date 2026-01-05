@@ -1,0 +1,161 @@
+#================================================
+# GOSS - LINAC 10x10 cm Field with PHSP
+#================================================
+# Elekta Infinity 6MV with 10x10 cm field
+# Records phase space file at Z = 10 cm
+#================================================
+
+#================================================
+# PHASE SPACE WRITER
+#================================================
+# Capture PHSP at two critical positions:
+# 1. After flattening filter (Z = 18.2 cm)
+# 2. After head exit / before phantom (Z = 55 cm)
+
+/action/IAEAphspWriter/namePrefix  phsp_infinity_22x22
+/action/IAEAphspWriter/zphsp     18.2 cm
+/action/IAEAphspWriter/zphsp     55.0 cm
+
+#================================================
+# WORLD
+#================================================
+/goss/geom/worldXY   100.0 cm
+/goss/geom/worldZ   150.0 cm
+
+#================================================
+# LINAC
+#================================================
+/goss/geom/linac/ElektaInfinity6MV/enable true
+/goss/geom/linac/ElektaInfinity6MV/fieldSize 22.0 cm
+
+#================================================
+# PHANTOM
+#================================================
+/goss/geom/phantom/material    G4_PLEXIGLASS
+/goss/geom/phantom/halfSizeX   15 cm
+/goss/geom/phantom/halfSizeY   15 cm
+/goss/geom/phantom/halfSizeZ   7.5 cm
+# Phantom above source: center at Z=115cm (extends from 100 to 130 cm)
+/goss/geom/phantom/positionZ   107.5 cm
+
+#================================================
+# DETECTORS
+#================================================
+/goss/geom/detector/material     G4_PLEXIGLASS
+/goss/geom/detector/halfSizeX      0.265 cm
+/goss/geom/detector/halfSizeY      0.265 cm
+/goss/geom/detector/halfThickness  0.5 cm
+/goss/geom/detector/gridSize       23
+/goss/geom/detector/spacing        0.8 cm
+/goss/geom/detector/numLayers     5
+/goss/geom/detector/layerSpacing   2 cm
+# First layer at 100.5 cm (relative to phantom center at 115cm: 115-14.5=100.5)
+/goss/geom/detector/firstLayerZ    109.5 cm
+
+#================================================
+# PHYSICS & RUN
+#================================================
+/my_phys/setList  EMStandardPhysics_option4
+/goss/saveInterval  10000
+/goss/outputFile    dose_infinity_22x22
+/goss/mergeCSV      true
+/run/numberOfThreads 8
+/run/initialize
+/run/setCut  1 mm
+
+#================================================
+# BEAM CONFIGURATION (GPS)
+#================================================
+# Advanced Gaussian beam with variance reduction
+
+# Particle type
+/gps/particle e-
+
+# Gaussian spatial distribution (elliptical beam)
+/gps/pos/type Beam
+/gps/pos/shape Circle
+/gps/pos/centre 0 0 -0.5 cm
+/gps/pos/sigma_x 1.0 mm   # cross-plane (Y)
+/gps/pos/sigma_y 2.1 mm   # in-plane (Z)
+# NOTE: In Geant4, X is beam direction → dispersion is in Y and Z
+
+# Beam angular distribution
+/gps/ang/type beam2d
+/gps/ang/rot2 0 1 0       # define plane for +X direction
+/gps/ang/sigma_x 1.35 deg
+/gps/ang/sigma_y 1.35 deg
+
+# Monoenergetic beam
+/gps/ene/type Mono
+/gps/ene/mono 6.6 MeV
+
+# Beam source at target (Z=0), directed upward (+Z)
+/gps/pos/centre 0 0 0 cm
+/gps/direction 0 0 1
+
+# Variance reduction techniques
+/process/em/setDirectionalSplitting true 
+/process/em/setDirectionalSplittingTarget 0 0 100 cm 
+/process/em/setDirectionalSplittingRadius 20 cm 
+/process/em/setSecBiasing eBrem TargetRegion 25 7 MeV
+
+#================================================
+# RUN SIMULATION
+#================================================
+/run/beamOn 100000 #0000
+
+
+
+
+#================================================
+# Optional: Visualization
+#================================================
+# Uncomment to visualize PHSP particles
+
+# Open OpenGL viewer
+/vis/open OGL 600x600-0+0
+
+# Draw geometry
+/vis/drawVolume
+
+# Add coordinate axes
+/vis/scene/add/axes 0 0 0 10 cm
+
+# Configure trajectories
+/vis/scene/add/trajectories smooth
+/vis/modeling/trajectories/create/drawByParticleID
+/vis/modeling/trajectories/drawByParticleID-0/set e- blue
+/vis/modeling/trajectories/drawByParticleID-0/set e+ red
+/vis/modeling/trajectories/drawByParticleID-0/set gamma green
+/vis/modeling/trajectories/drawByParticleID-0/set neutron yellow
+/vis/modeling/trajectories/drawByParticleID-0/set proton cyan
+
+# Show hits
+/vis/scene/add/hits
+
+# Viewer settings
+/vis/viewer/set/autoRefresh true
+/vis/viewer/set/viewpointThetaPhi 70 20
+/vis/viewer/zoom 1.5
+
+# Accumulate events
+/vis/scene/endOfEventAction accumulate
+
+# Update scene
+/vis/viewer/flush
+
+#================================================
+# NOTES
+#================================================
+# - PHSP file must exist in current directory or use full path
+# - beamOn number should match particles in PHSP (or less)
+# - Recycling multiplies available particles
+# - Parallel runs split PHSP file for distributed computing
+# - Transformations applied in order: translate → rotate → gantry/collimator
+#
+# Particle colors in visualization:
+#   Blue   = Electrons (e-)
+#   Red    = Positrons (e+)
+#   Green  = Photons (gamma)
+#   Yellow = Neutrons
+#   Cyan   = Protons
