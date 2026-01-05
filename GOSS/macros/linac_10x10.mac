@@ -1,9 +1,20 @@
 #================================================
-# GOSS - LINAC 10x10 cm Field
+# GOSS - LINAC 10x10 cm Field with PHSP
 #================================================
 # Elekta Infinity 6MV with 10x10 cm field
+# Records phase space file at Z = 10 cm
 #================================================
 
+#================================================
+# PHASE SPACE WRITER
+#================================================
+# Record particles crossing Z = 10 cm plane
+/action/IAEAphspWriter/namePrefix  phsp_10x10
+/action/IAEAphspWriter/zphsp      10.0 cm
+
+#================================================
+# WORLD
+#================================================
 /goss/geom/worldXY   100.0 cm
 /goss/geom/worldZ   150.0 cm
 
@@ -47,11 +58,49 @@
 /run/setCut  0.1 mm
 
 #================================================
-# BEAM
+# BEAM CONFIGURATION (GPS)
 #================================================
-/gps/particle e-
-/gps/ene/mono 6 MeV
-/gps/pos/centre 0 0 100 cm
-/gps/direction 0 0 -1
+# Advanced Gaussian beam with variance reduction
 
+# Particle type
+/gps/particle e-
+
+# Gaussian spatial distribution (elliptical beam)
+/gps/pos/type Beam
+/gps/pos/shape Circle
+/gps/pos/centre 0 0 100.05 cm
+/gps/pos/sigma_x 1.0 mm   # cross-plane (Y)
+/gps/pos/sigma_y 2.1 mm   # in-plane (Z)
+# NOTE: In Geant4, X is beam direction → dispersion is in Y and Z
+
+# Beam angular distribution
+/gps/ang/type beam2d
+/gps/ang/rot2 0 1 0       # define plane for +X direction
+/gps/ang/sigma_x 1.35 deg
+/gps/ang/sigma_y 1.35 deg
+
+# Monoenergetic beam
+/gps/ene/type Mono
+/gps/ene/mono 6.6 MeV
+
+# Variance reduction techniques
+/process/em/setDirectionalSplitting true 
+/process/em/setDirectionalSplittingTarget 0 0 0 cm 
+/process/em/setDirectionalSplittingRadius 29.7 cm 
+/process/em/setSecBiasing eBrem TargetRegion 70 7 MeV
+
+#================================================
+# RUN SIMULATION
+#================================================
 /run/beamOn 10000
+
+
+
+#================================================
+# Optional: Visualization
+#================================================ 
+/vis/open OGL
+/vis/drawVolume
+/vis/scene/add/axes
+/vis/viewer/set/autoRefresh true
+/vis/viewer/flush

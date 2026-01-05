@@ -41,10 +41,42 @@
 #include "PhysicsList.hh"
 #include "ActionInitialization.hh"
 #include "GOSSMessenger.hh"
+#include "GOSSMerger.hh"
+
+#include <string>
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 int main(int argc, char** argv) {
+
+  // Check for --merge command
+  if (argc >= 2 && std::string(argv[1]) == "--merge") {
+    G4cout << "\n========================================" << G4endl;
+    G4cout << "  GOSS CSV Merger (Standalone Mode)" << G4endl;
+    G4cout << "========================================\n" << G4endl;
+    
+    std::string directory = (argc >= 3) ? argv[2] : ".";
+    GOSSMerger::MergeThreadOutputs(directory);
+    
+    G4cout << "\nMerge complete!" << G4endl;
+    return 0;
+  }
+
+  // Show help if no arguments
+  if (argc == 1) {
+    G4cout << "\n========================================" << G4endl;
+    G4cout << "  GOSS - Geant4 Dose Scoring System" << G4endl;
+    G4cout << "========================================\n" << G4endl;
+    G4cout << "Usage:" << G4endl;
+    G4cout << "  ./goss <macro_file>     Run simulation with macro" << G4endl;
+    G4cout << "  ./goss --merge [dir]    Merge CSV files from threads\n" << G4endl;
+    G4cout << "Examples:" << G4endl;
+    G4cout << "  ./goss macros/my_simulation.mac" << G4endl;
+    G4cout << "  ./goss --merge" << G4endl;
+    G4cout << "  ./goss --merge ../results" << G4endl;
+    G4cout << "\n========================================\n" << G4endl;
+    return 0;
+  }
 
   // Choose the Random engine
   G4Random::setTheEngine(new CLHEP::RanecuEngine);
