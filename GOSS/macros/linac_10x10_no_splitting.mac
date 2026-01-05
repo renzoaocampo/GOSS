@@ -1,15 +1,17 @@
 #================================================
 # GOSS - LINAC 10x10 cm Field with PHSP
+# VERSION WITHOUT SPLITTING (for multi-threading compatibility)
 #================================================
 # Elekta Infinity 6MV with 10x10 cm field
-# Records phase space file at Z = 10 cm
+# Records phase space file at Z = 50 cm
+# NO variance reduction for clean particle count
 #================================================
 
 #================================================
 # PHASE SPACE WRITER
 #================================================
-# Record particles crossing Z = 10 cm plane
-/action/IAEAphspWriter/namePrefix  phsp_10x10
+# Record particles crossing Z = 50 cm plane
+/action/IAEAphspWriter/namePrefix  phsp_10x10_no_split
 /action/IAEAphspWriter/zphsp     50.0 cm
 
 #================================================
@@ -45,24 +47,23 @@
 /goss/geom/detector/spacing        1 cm
 /goss/geom/detector/numLayers     5
 /goss/geom/detector/layerSpacing   0.5 cm
-# First layer at 100.5 cm (relative to phantom center at 115cm: 115-14.5=100.5)
 /goss/geom/detector/firstLayerZ    120 cm
 
 #================================================
 # PHYSICS & RUN
 #================================================
 /my_phys/setList  EMStandardPhysics_option4
-/goss/saveInterval  10000
-/goss/outputFile    dose_linac_10x10
+/goss/saveInterval  100
+/goss/outputFile    dose_linac_10x10_no_split
 /goss/mergeCSV      true
-/run/numberOfThreads 8
+/run/numberOfThreads 4
 /run/initialize
 /run/setCut  1 mm
 
 #================================================
 # BEAM CONFIGURATION (GPS)
 #================================================
-# Advanced Gaussian beam with variance reduction
+# Advanced Gaussian beam WITHOUT variance reduction
 
 # Particle type
 /gps/particle e-
@@ -73,7 +74,6 @@
 /gps/pos/centre 0 0 -0.5 cm
 /gps/pos/sigma_x 1.0 mm   # cross-plane (Y)
 /gps/pos/sigma_y 2.1 mm   # in-plane (Z)
-# NOTE: In Geant4, X is beam direction → dispersion is in Y and Z
 
 # Beam angular distribution
 /gps/ang/type beam2d
@@ -89,69 +89,21 @@
 /gps/pos/centre 0 0 0 cm
 /gps/direction 0 0 1
 
-# Variance reduction techniques
-/process/em/setDirectionalSplitting true 
-/process/em/setDirectionalSplittingTarget 0 0 100 cm 
-/process/em/setDirectionalSplittingRadius 20 cm 
-/process/em/setSecBiasing eBrem TargetRegion 20 7 MeV
+# NO VARIANCE REDUCTION - for clean particle count
+# This ensures header particle count matches file particle count
 
 #================================================
 # RUN SIMULATION
 #================================================
-/run/beamOn 500000
-
-
-
-
-#================================================
-# Optional: Visualization
-#================================================
-# Uncomment to visualize PHSP particles
-
-# Open OpenGL viewer
-/vis/open OGL 600x600-0+0
-
-# Draw geometry
-/vis/drawVolume
-
-# Add coordinate axes
-/vis/scene/add/axes 0 0 0 10 cm
-
-# Configure trajectories
-/vis/scene/add/trajectories smooth
-/vis/modeling/trajectories/create/drawByParticleID
-/vis/modeling/trajectories/drawByParticleID-0/set e- blue
-/vis/modeling/trajectories/drawByParticleID-0/set e+ red
-/vis/modeling/trajectories/drawByParticleID-0/set gamma green
-/vis/modeling/trajectories/drawByParticleID-0/set neutron yellow
-/vis/modeling/trajectories/drawByParticleID-0/set proton cyan
-
-# Show hits
-/vis/scene/add/hits
-
-# Viewer settings
-/vis/viewer/set/autoRefresh true
-/vis/viewer/set/viewpointThetaPhi 70 20
-/vis/viewer/zoom 1.5
-
-# Accumulate events
-/vis/scene/endOfEventAction accumulate
-
-# Update scene
-/vis/viewer/flush
+# Use multiple of 8 for 8-thread compatibility
+/run/beamOn 800000
 
 #================================================
 # NOTES
 #================================================
-# - PHSP file must exist in current directory or use full path
-# - beamOn number should match particles in PHSP (or less)
-# - Recycling multiplies available particles
-# - Parallel runs split PHSP file for distributed computing
-# - Transformations applied in order: translate → rotate → gantry/collimator
-#
-# Particle colors in visualization:
-#   Blue   = Electrons (e-)
-#   Red    = Positrons (e+)
-#   Green  = Photons (gamma)
-#   Yellow = Neutrons
-#   Cyan   = Protons
+# This macro generates a PHSP file WITHOUT splitting
+# The particle count in header will match the actual file
+# This allows using more threads (4, 8, etc.) when reading
+# 
+# Expected particles in PHSP: ~50,000-60,000
+# (depends on geometry and cutoffs)

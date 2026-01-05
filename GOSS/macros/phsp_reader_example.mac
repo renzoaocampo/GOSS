@@ -1,23 +1,19 @@
 #================================================
 # GOSS - Phase Space Reader Example
 #================================================
-# Uses PHSP file from linac_10x10.mac as source
-# Demonstrates all IAEAphspReader parameters
-#================================================
-
+ 
 #================================================
 # 1. PHSP SOURCE CONFIGURATION
 #================================================
-# Specify PHSP file to read (without extension)
-# Will read: phsp_10x10_20cm.IAEAheader and phsp_10x10_20cm.IAEAphsp
-/action/IAEAphspReader/fileName   phsp_10x10_20cm
+# Specify PHSP file to read (without extension) 
+/action/IAEAphspReader/fileName   phsp_10x10_50cm
 
 #================================================
 # 2. WORLD GEOMETRY
 #================================================
 # Smaller world since source is already at Z=10cm
-/goss/geom/worldXY   50.0 cm
-/goss/geom/worldZ    60.0 cm
+/goss/geom/worldXY  100.0 cm
+/goss/geom/worldZ   150.0 cm
 
 #================================================
 # 3. PHANTOM CONFIGURATION
@@ -32,7 +28,7 @@
 
 # Phantom positioned below PHSP plane (Z=10cm)
 # Center at Z=-5cm (extends from -15 to +5 cm)
-/goss/geom/phantom/positionZ   -15 cm
+/goss/geom/phantom/positionZ   115 cm
 
 #================================================
 # 4. DETECTOR GRID
@@ -44,8 +40,8 @@
 /goss/geom/detector/gridSize       21
 /goss/geom/detector/spacing        1 cm 
 /goss/geom/detector/numLayers     5
-/goss/geom/detector/layerSpacing   1 cm
-/goss/geom/detector/firstLayerZ    -0.5 cm
+/goss/geom/detector/layerSpacing   0.5 cm
+/goss/geom/detector/firstLayerZ    120 cm
 
 #================================================
 # 5. PHYSICS
@@ -55,14 +51,14 @@
 #================================================
 # 6. GOSS DOSE SCORING
 #================================================
-/goss/saveInterval  10
+/goss/saveInterval  1
 /goss/outputFile    dose_from_phsp
-/goss/mergeCSV      true
+/goss/mergeCSV      false
 
 #================================================
 # 7. RUN CONFIGURATION
 #================================================
-/run/numberOfThreads 2
+/run/numberOfThreads 1
 /run/initialize
 /run/setCut  0.1 mm
 
@@ -71,64 +67,15 @@
 #================================================
 
 # Verbose level (0=quiet, 1=normal, 2=detailed)
-/IAEAphspReader/verbose   1
-
-# Parallel runs (for splitting PHSP file)
-# Total number of parallel runs
+/IAEAphspReader/verbose   2 
 /IAEAphspReader/numberOfParallelRuns 1
-# Which parallel run this is (1 to numberOfParallelRuns)
-/IAEAphspReader/parallelRun          1
+/IAEAphspReader/parallelRun          1  
 
-# Recycling (reuse particles N times)
-# 0 = no recycling, N = recycle N times
-# PHSP has 1703 particles, so recycling allows more events
-/IAEAphspReader/recycling  0
-
-# ---------------------------
-# Geometric Transformations
-# ---------------------------
-
-# Translation (move PHSP plane)
-# Default: 0 0 0 (no translation)
-/IAEAphspReader/translate  0 0 0 cm
-
-# Rotation order: 123=XYZ, 132=XZY, 213=YXZ, etc.
-/IAEAphspReader/rotationOrder  123
-
-# Rotations around axes
-/IAEAphspReader/rotateX  0 deg
-/IAEAphspReader/rotateY  0 deg
-/IAEAphspReader/rotateZ  0 deg
-
-# ---------------------------
-# Clinical Setup Parameters
-# ---------------------------
-
-# Isocenter position (for gantry/collimator rotations)
-/IAEAphspReader/isocenterPosition  0 0 0 cm
-
-# Collimator rotation
-/IAEAphspReader/collimatorRotationAxis  0 0 1
-/IAEAphspReader/collimatorAngle  0 deg
-
-# Gantry rotation
-/IAEAphspReader/gantryRotationAxis  0 1 0
-/IAEAphspReader/gantryAngle  0 deg
-
-# ---------------------------
-# Symmetry Options
-# ---------------------------
-# Enable axial symmetry to increase statistics
-# Mirrors particles across specified axes
-
-/IAEAphspReader/axialSymmetryX  false
-/IAEAphspReader/axialSymmetryY  false
-/IAEAphspReader/axialSymmetryZ  false
-
+/IAEAphspReader/recycling 10
 #================================================
 # 9. RUN SIMULATION
 #================================================ 
-/run/beamOn 13
+/run/beamOn 11
 
 
 
@@ -168,19 +115,4 @@
 
 # Update scene
 /vis/viewer/flush
-
-#================================================
-# NOTES
-#================================================
-# - PHSP file must exist in current directory or use full path
-# - beamOn number should match particles in PHSP (or less)
-# - Recycling multiplies available particles
-# - Parallel runs split PHSP file for distributed computing
-# - Transformations applied in order: translate → rotate → gantry/collimator
-#
-# Particle colors in visualization:
-#   Blue   = Electrons (e-)
-#   Red    = Positrons (e+)
-#   Green  = Photons (gamma)
-#   Yellow = Neutrons
-#   Cyan   = Protons
+ 
