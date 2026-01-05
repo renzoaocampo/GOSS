@@ -1,54 +1,61 @@
 #================================================
-# GOSS Example Macro
+# GOSS with LINAC Infinity Geometry
 #================================================  
 
 #================================================
 # PHSP Writer Configuration (optional)
 #================================================
-/action/IAEAphspWriter/namePrefix  psf_z
+/action/IAEAphspWriter/namePrefix  psf_linac
 /action/IAEAphspWriter/zphsp      10.1 cm
 
 #================================================
-# World Geometry (half-sizes)
+# World Geometry (larger for LINAC)
 #================================================
-/goss/geom/worldXY   50.0 cm
-/goss/geom/worldZ   120.0 cm
+/goss/geom/worldXY   100.0 cm
+/goss/geom/worldZ   150.0 cm
+
+#================================================
+# LINAC Configuration
+#================================================
+# Enable Elekta Infinity 6MV LINAC geometry
+/goss/geom/linac/ElektaInfinity6MV/enable true
+
+# Set field size at isocenter (MLC and Jaws adjust automatically)
+/goss/geom/linac/ElektaInfinity6MV/fieldSize 15.0 cm
 
 #================================================
 # Phantom Configuration
 #================================================
-# Material: Use NIST names (G4_WATER, G4_PMMA, G4_TISSUE_SOFT_ICRP, etc.)
 /goss/geom/phantom/material    G4_WATER
 
-# Half-sizes (full size = 2 * halfSize)
+# Phantom positioned below isocenter
 /goss/geom/phantom/halfSizeX   15 cm
 /goss/geom/phantom/halfSizeY   15 cm
-/goss/geom/phantom/halfSizeZ   10 cm
-
-# Center Z position
-/goss/geom/phantom/positionZ   0 cm
+/goss/geom/phantom/halfSizeZ   15 cm
+/goss/geom/phantom/positionZ   -15 cm
 
 #================================================
 # Detector Grid Configuration
 #================================================
-# Material
-/goss/geom/detector/material       G4_Si
+/goss/geom/detector/material     G4_WATER
 
 # Individual detector half-sizes
 /goss/geom/detector/halfSizeX      0.3 cm
 /goss/geom/detector/halfSizeY      0.3 cm
 /goss/geom/detector/halfThickness  0.3 cm
 
-# Grid: 40x40 = 1600 detectors per layer
+# Grid: 21x21 detectors per layer
 /goss/geom/detector/gridSize       21
 
 # Center-to-center spacing
 /goss/geom/detector/spacing        1 cm
 
-# Layers configuration
-/goss/geom/detector/numLayers     10
-/goss/geom/detector/layerSpacing   1 cm
-/goss/geom/detector/firstLayerZ    5 cm
+# Layers configuration (inside phantom)
+# Phantom center at -15 cm, extends from -30 to 0 cm
+# First layer should be relative to phantom center
+/goss/geom/detector/numLayers     5
+/goss/geom/detector/layerSpacing   0.5 cm
+/goss/geom/detector/firstLayerZ    -0.5 cm  # Relative to phantom center (-15cm), so at -3cm absolute
 
 #================================================
 # Physics
@@ -59,12 +66,8 @@
 # GOSS Dose Scoring Configuration
 #================================================
 /goss/saveInterval  1000
-/goss/outputFile    dose_output
+/goss/outputFile    dose_linac_output
 /goss/mergeCSV      true
-#/goss/seed         12345
-
-
-
 /run/numberOfThreads 4
  
 /run/initialize
@@ -72,18 +75,18 @@
 /run/setCut  0.1 mm
 
 #================================================
-# GPS Beam Configuration
+# GPS Beam Configuration (Point source at isocenter)
 #================================================
-/gps/particle gamma
+/gps/particle e-
 /gps/ene/type Mono
 /gps/ene/mono 6 MeV
 
-# Point source above phantom, directed towards -Z (towards detectors)
+# Point source at LINAC target position (SSD = 100 cm)
 /gps/pos/type Point
-/gps/pos/centre 0 0 40 cm
+/gps/pos/centre 0 0 100 cm
 /gps/direction 0 0 -1
 
-/run/beamOn 100000
+/run/beamOn 100
 
 #================================================
 # Visualization (optional)

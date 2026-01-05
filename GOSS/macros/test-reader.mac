@@ -8,8 +8,8 @@
 #
 /action/IAEAphspReader/fileName   ../../phsp/test
 #
-/my_geom/worldXY   25.0 cm
-/my_geom/worldZ   100.0 cm
+/goss/geom/worldXY   25.0 cm
+/goss/geom/worldZ   100.0 cm
 #
 /my_phys/setList EMStandardPhysics_option4
 #

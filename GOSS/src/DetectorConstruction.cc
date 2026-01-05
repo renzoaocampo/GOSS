@@ -82,6 +82,13 @@ DetectorConstruction::DetectorConstruction()
   fDetectorLayerSpacing = 2.*cm;
   fDetectorFirstLayerZ = 15.*cm;
 
+  //============================================
+  // LINAC defaults
+  //============================================
+  fLinacGeometry = new LinacInfinityGeometry();
+  fEnableLinac = false;  // Disabled by default
+  fLinacFieldSize = 15.0 * cm;
+
   G4cout << *(G4Material::GetMaterialTable()) << G4endl;
 }
 
@@ -90,6 +97,7 @@ DetectorConstruction::DetectorConstruction()
 DetectorConstruction::~DetectorConstruction()
 {
   delete fMessenger;
+  delete fLinacGeometry;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -145,6 +153,14 @@ G4VPhysicalVolume* DetectorConstruction::Construct()
   auto visWorld = new G4VisAttributes(G4Colour(0.1, 0.5, 1.0));
   visWorld->SetVisibility(true);
   lWorld->SetVisAttributes(visWorld);
+
+  //============================================
+  // LINAC INFINITY (optional - controlled by fEnableLinac)
+  //============================================
+  if (fEnableLinac) {
+    G4cout << "\n*** Constructing LINAC Infinity Geometry ***" << G4endl;
+    fLinacGeometry->ConstructLinac(lWorld, fLinacFieldSize);
+  }
 
   //============================================
   // PHANTOM (inside world)

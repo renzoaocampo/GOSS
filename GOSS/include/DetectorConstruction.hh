@@ -42,6 +42,7 @@
 #include "G4LogicalSkinSurface.hh"
 
 #include "SensitiveDetector.hh"
+#include "LinacInfinityGeometry.hh"
 
 class G4LogicalVolume;
 class G4Material;
@@ -94,6 +95,12 @@ public:
   inline void SetDetectorLayerSpacing(G4double val) { fDetectorLayerSpacing = val; }
   inline void SetDetectorFirstLayerZ(G4double val)  { fDetectorFirstLayerZ = val; }
 
+  //============================================
+  // LINAC geometry control
+  //============================================
+  inline void EnableLinac(bool enable) { fEnableLinac = enable; }
+  inline void SetLinacFieldSize(G4double fieldSize) { fLinacFieldSize = fieldSize; }
+
 private:
   //============================================
   // World parameters
@@ -134,6 +141,13 @@ private:
   G4LogicalVolume* logicDetector;
   G4VPhysicalVolume* physDetector;
   G4LogicalVolume* fScoringVolume;
+
+  //============================================
+  // LINAC geometry
+  //============================================
+  LinacInfinityGeometry* fLinacGeometry;
+  bool fEnableLinac;
+  G4double fLinacFieldSize;
 
   virtual void ConstructSDandField() override;
 };

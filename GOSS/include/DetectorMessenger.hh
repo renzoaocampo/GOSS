@@ -62,6 +62,8 @@ private:
   G4UIdirectory* fGeomDir;
   G4UIdirectory* fPhantomDir;
   G4UIdirectory* fDetectorDir;
+  G4UIdirectory* fLinacDir;
+  G4UIdirectory* fLinacInfinityDir;
 
   //============================================
   // World commands
@@ -90,6 +92,12 @@ private:
   G4UIcmdWithAnInteger* fDetectorLayersCmd;
   G4UIcmdWithADoubleAndUnit* fDetectorLayerSpacingCmd;
   G4UIcmdWithADoubleAndUnit* fDetectorFirstLayerZCmd;
+
+  //============================================
+  // LINAC Elekta Infinity 6MV commands
+  //============================================
+  G4UIcmdWithAString* fLinacInfinityEnableCmd;
+  G4UIcmdWithADoubleAndUnit* fLinacInfinityFieldSizeCmd;
 };
 
 #endif

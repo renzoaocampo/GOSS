@@ -1,0 +1,55 @@
+#================================================
+# LINAC Infinity - Campo 10x10 cm
+#================================================  
+
+/goss/geom/worldXY   100.0 cm
+/goss/geom/worldZ   150.0 cm
+
+#================================================
+# LINAC Elekta Infinity 6MV
+#================================================
+/goss/geom/linac/ElektaInfinity6MV/enable true
+/goss/geom/linac/ElektaInfinity6MV/fieldSize 10.0 cm
+
+#================================================
+# Phantom
+#================================================
+/goss/geom/phantom/material    G4_WATER
+/goss/geom/phantom/halfSizeX   15 cm
+/goss/geom/phantom/halfSizeY   15 cm
+/goss/geom/phantom/halfSizeZ   15 cm
+/goss/geom/phantom/positionZ   -15 cm
+
+#================================================
+# Detector Grid
+#================================================
+/goss/geom/detector/material       G4_Si
+/goss/geom/detector/halfSizeX      0.3 cm
+/goss/geom/detector/halfSizeY      0.3 cm
+/goss/geom/detector/halfThickness  0.3 cm
+/goss/geom/detector/gridSize       21
+/goss/geom/detector/spacing        1 cm
+/goss/geom/detector/numLayers     5
+/goss/geom/detector/layerSpacing   2 cm
+/goss/geom/detector/firstLayerZ    12 cm  # Inside phantom (center at -15cm)
+
+#================================================
+# Physics & Run
+#================================================
+/my_phys/setList  EMStandardPhysics_option4
+/goss/saveInterval  1000
+/goss/outputFile    dose_10x10
+/run/numberOfThreads 4
+ 
+/run/initialize
+/run/setCut  0.1 mm
+
+#================================================
+# Beam (electrons at target)
+#================================================
+/gps/particle e-
+/gps/ene/mono 6 MeV
+/gps/pos/centre 0 0 100 cm
+/gps/direction 0 0 -1
+
+/run/beamOn 50000
