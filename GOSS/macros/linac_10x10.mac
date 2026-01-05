@@ -10,7 +10,7 @@
 #================================================
 # Record particles crossing Z = 10 cm plane
 /action/IAEAphspWriter/namePrefix  phsp_10x10
-/action/IAEAphspWriter/zphsp      10.0 cm
+/action/IAEAphspWriter/zphsp     20.0 cm
 
 #================================================
 # WORLD
@@ -50,7 +50,7 @@
 # PHYSICS & RUN
 #================================================
 /my_phys/setList  EMStandardPhysics_option4
-/goss/saveInterval  1000
+/goss/saveInterval  100
 /goss/outputFile    dose_linac_10x10
 /goss/mergeCSV      true
 /run/numberOfThreads 4
@@ -87,20 +87,65 @@
 /process/em/setDirectionalSplitting true 
 /process/em/setDirectionalSplittingTarget 0 0 0 cm 
 /process/em/setDirectionalSplittingRadius 29.7 cm 
-/process/em/setSecBiasing eBrem TargetRegion 70 7 MeV
+/process/em/setSecBiasing eBrem TargetRegion 20 7 MeV
 
 #================================================
 # RUN SIMULATION
 #================================================
-/run/beamOn 10000
+/run/beamOn 50000
+
 
 
 
 #================================================
 # Optional: Visualization
-#================================================ 
-/vis/open OGL
+#================================================
+# Uncomment to visualize PHSP particles
+
+# Open OpenGL viewer
+/vis/open OGL 600x600-0+0
+
+# Draw geometry
 /vis/drawVolume
-/vis/scene/add/axes
+
+# Add coordinate axes
+/vis/scene/add/axes 0 0 0 10 cm
+
+# Configure trajectories
+/vis/scene/add/trajectories smooth
+/vis/modeling/trajectories/create/drawByParticleID
+/vis/modeling/trajectories/drawByParticleID-0/set e- blue
+/vis/modeling/trajectories/drawByParticleID-0/set e+ red
+/vis/modeling/trajectories/drawByParticleID-0/set gamma green
+/vis/modeling/trajectories/drawByParticleID-0/set neutron yellow
+/vis/modeling/trajectories/drawByParticleID-0/set proton cyan
+
+# Show hits
+/vis/scene/add/hits
+
+# Viewer settings
 /vis/viewer/set/autoRefresh true
+/vis/viewer/set/viewpointThetaPhi 70 20
+/vis/viewer/zoom 1.5
+
+# Accumulate events
+/vis/scene/endOfEventAction accumulate
+
+# Update scene
 /vis/viewer/flush
+
+#================================================
+# NOTES
+#================================================
+# - PHSP file must exist in current directory or use full path
+# - beamOn number should match particles in PHSP (or less)
+# - Recycling multiplies available particles
+# - Parallel runs split PHSP file for distributed computing
+# - Transformations applied in order: translate → rotate → gantry/collimator
+#
+# Particle colors in visualization:
+#   Blue   = Electrons (e-)
+#   Red    = Positrons (e+)
+#   Green  = Photons (gamma)
+#   Yellow = Neutrons
+#   Cyan   = Protons
