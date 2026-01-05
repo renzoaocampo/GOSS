@@ -123,7 +123,7 @@ void GOSSMerger::ParseAndAccumulate(const std::string& filepath,
     
     // Expected columns: Detector_Number, x_cm, y_cm, z_cm, Total_Dose_Gy,
     //                   Dose_Per_Particle_Gy, Dose_Squared_Sum, 
-    //                   Mean_Dose_Squared_Gy2, Uncertainty_3sigma_Gy, nEvents
+    //                   Mean_Dose_Squared_Gy2, Uncertainty_3sigma_Per_Particle_Gy, nEvents
     if (values.size() >= 10) {
       int detNum = static_cast<int>(values[0]);
       
@@ -158,7 +158,7 @@ void GOSSMerger::ExportMerged(const std::map<int, DetectorData>& data,
   }
   
   // Write header
-  file << "Detector_Number,x_cm,y_cm,z_cm,Total_Dose_Gy,Dose_Per_Particle_Gy,Uncertainty_3sigma_Gy,nEvents\n";
+  file << "Detector_Number,x_cm,y_cm,z_cm,Total_Dose_Gy,Dose_Per_Particle_Gy,Uncertainty_3sigma_Per_Particle_Gy,nEvents\n";
   
   // Write data with recalculated statistics
   for (const auto& pair : data) {
@@ -171,7 +171,7 @@ void GOSSMerger::ExportMerged(const std::map<int, DetectorData>& data,
     if (d.nEvents > 0) {
       dosePerParticle = d.totalDose / d.nEvents;
       
-      // 3sigma = 3 * sqrt((sum(D^2)/n - (sum(D)/n)^2) / n)
+      // 3sigma of dose per particle = 3 * sqrt((sum(D^2)/n - (sum(D)/n)^2) / n)
       double meanDoseSquared = d.doseSquaredSum / d.nEvents;
       double meanDose = d.totalDose / d.nEvents;
       double variance = meanDoseSquared - (meanDose * meanDose);

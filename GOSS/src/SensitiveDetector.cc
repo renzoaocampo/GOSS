@@ -115,7 +115,7 @@ void MySensitiveDetector::EndOfEvent(G4HCofThisEvent*)
     man->CreateNtupleDColumn("Dose_Per_Particle_Gy");
     man->CreateNtupleDColumn("Dose_Squared_Sum");
     man->CreateNtupleDColumn("Mean_Dose_Squared_Gy2");
-    man->CreateNtupleDColumn("Uncertainty_3sigma_Gy");
+    man->CreateNtupleDColumn("Uncertainty_3sigma_Per_Particle_Gy");
     man->CreateNtupleDColumn("nEvents");
     man->FinishNtuple(0);
     
