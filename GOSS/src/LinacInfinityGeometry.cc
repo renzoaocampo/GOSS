@@ -105,8 +105,8 @@ void LinacInfinityGeometry::ConstructTarget(G4LogicalVolume* worldLogical)
     G4Region* targetRegion = new G4Region("TargetRegion");
     targetRegion->AddRootLogicalVolume(logicTarget);
     
-    // Position
-    G4ThreeVector posTarget(0, 0, fSSD - targetZOffset);
+    // Position (inverted: source now at Z=0)
+    G4ThreeVector posTarget(0, 0, targetZOffset);
     new G4PVPlacement(nullptr, posTarget, logicTarget, 
         "Target", worldLogical, false, 0, true);
     
@@ -149,8 +149,8 @@ void LinacInfinityGeometry::ConstructPrimaryCollimator(G4LogicalVolume* worldLog
     G4LogicalVolume* collimatorLogical = new G4LogicalVolume(
         collimatorHollowed, fTungsten, "CollimatorLogical");
     
-    // Position
-    G4double zPosition = fSSD - coneHeight / 2;
+    // Position (inverted: source now at Z=0)
+    G4double zPosition = coneHeight / 2;
     new G4PVPlacement(nullptr, G4ThreeVector(0, 0, zPosition),
         collimatorLogical, "PrimaryCollimator", worldLogical, false, 0, true);
     
@@ -171,14 +171,14 @@ void LinacInfinityGeometry::ConstructFlatteningFilter(G4LogicalVolume* worldLogi
     G4double discRadius = 4.0 * cm;
     G4double discThickness = 0.5 * cm;
     
-    // Flattening filter (cone)
+    // Flattening filter (cone) - inverted for upward beam
     G4double filterHeight = 2.77 * cm;
-    G4double filterRmax1 = 4.0 * cm;  // base (bottom)
-    G4double filterRmax2 = 0.0 * cm;  // tip (top)
+    G4double filterRmax1 = 0.0 * cm;  // tip (bottom, toward source)
+    G4double filterRmax2 = 4.0 * cm;  // base (top, toward patient)
     
-    // Positions (inverted in Z)
-    G4double filterZ = fSSD - 15.9 * cm;
-    G4double discZ = filterZ - (discThickness / 2 + filterHeight / 2);
+    // Positions (inverted: source now at Z=0)
+    G4double filterZ = 15.9 * cm;
+    G4double discZ = filterZ + (discThickness / 2 + filterHeight / 2);
     
     // Create disc
     G4Tubs* solidDisc = new G4Tubs("AlDisc", 
@@ -188,10 +188,10 @@ void LinacInfinityGeometry::ConstructFlatteningFilter(G4LogicalVolume* worldLogi
     new G4PVPlacement(0, G4ThreeVector(0, 0, discZ),
         logicDisc, "AlDisc", worldLogical, false, 0, true);
     
-    // Create filter
+    // Create filter (cone inverted)
     G4Cons* solidFilter = new G4Cons("FlatteningFilter",
-        0, filterRmax1,             // base
-        0, filterRmax2,             // tip
+        0, filterRmax1,             // bottom (tip toward source)
+        0, filterRmax2,             // top (base toward patient)
         filterHeight / 2,
         0, 360 * deg);
     G4LogicalVolume* logicFilter = new G4LogicalVolume(
@@ -226,7 +226,7 @@ void LinacInfinityGeometry::ConstructShielding(G4LogicalVolume* worldLogical)
     G4LogicalVolume* logicRevestimiento = new G4LogicalVolume(
         revestimiento, fShieldingMaterial, "LogicRevestimiento");
     
-    new G4PVPlacement(0, G4ThreeVector(0, 0, fSSD - 20.6325 * cm),
+    new G4PVPlacement(0, G4ThreeVector(0, 0, 20.6325 * cm),
         logicRevestimiento, "Revestimiento", worldLogical, false, 0, true);
     
     // Upper hollow cylinder
@@ -240,7 +240,7 @@ void LinacInfinityGeometry::ConstructShielding(G4LogicalVolume* worldLogical)
         cilindroHueco, fShieldingMaterial, "LogicCilindroHueco");
     
     G4double zPosCilindro = 20.6325 * cm + 59.625 * cm / 2 + 2.0 * cm / 2;
-    new G4PVPlacement(0, G4ThreeVector(0, 0, fSSD - zPosCilindro),
+    new G4PVPlacement(0, G4ThreeVector(0, 0, zPosCilindro),
         logicCilindroHueco, "CilindroHueco", worldLogical, false, 0, true);
     
     // Visualization
@@ -263,7 +263,7 @@ void LinacInfinityGeometry::ConstructMLC(G4LogicalVolume* worldLogical)
     // MLC parameters
     fMLCParams.leafWidth = 5.0 * mm;
     fMLCParams.leafHeight = 90.0 * mm;
-    fMLCParams.leafZPosition = fSSD - 30.9 * cm;
+    fMLCParams.leafZPosition = 30.9 * cm;
     fMLCParams.numLeaves = 80;
     fMLCParams.interleafGap = 0.09 * mm;
     fMLCParams.blockX = 34.0 * cm;
@@ -331,9 +331,16 @@ void LinacInfinityGeometry::ConstructMLC(G4LogicalVolume* worldLogical)
 void LinacInfinityGeometry::CalculateMLCPositions()
 {
     G4double L = fFieldSize / 2.0;  // Half field size
-    G4double mlcHalfOpening = L * (fSSD - fMLCParams.leafZPosition) / fSSD;
+    
+    // With source at Z=0 and isocenter at Z=SSD:
+    // Distance from source to MLC
+    G4double sourceToMLC = fMLCParams.leafZPosition;
+    
+    // Aperture by geometric projection
+    G4double mlcHalfOpening = L * sourceToMLC / fSSD;
+    
     G4double pitch = fMLCParams.leafWidth + fMLCParams.interleafGap;
-    G4double yHalfOpening = L * (fSSD - fMLCParams.leafZPosition) / fSSD;
+    G4double yHalfOpening = L * sourceToMLC / fSSD;
     
     fMLCParams.leafXPShift.resize(fMLCParams.numLeaves, 0.0);
     fMLCParams.leafXNShift.resize(fMLCParams.numLeaves, 0.0);
@@ -367,7 +374,7 @@ void LinacInfinityGeometry::ConstructJaws(G4LogicalVolume* worldLogical)
     fJawParams.lengthX = 20.0 * cm;
     fJawParams.widthY = 20.0 * cm;
     fJawParams.heightZ = 7.80 * cm;
-    fJawParams.zPosition = fSSD - 43.2 * cm;
+    fJawParams.zPosition = 43.2 * cm;
     
     // Calculate jaw positions
     CalculateJawPositions();
@@ -416,10 +423,14 @@ void LinacInfinityGeometry::CalculateJawPositions()
     G4double L = fFieldSize / 2.0;
     G4double a = fJawParams.heightZ;
     G4double b = fJawParams.widthY;
+    
+    // With source at Z=0: distance from jaw to isocenter
     G4double z0 = fSSD - fJawParams.zPosition;
     G4double D1 = 0.5 * std::sqrt(a * a + b * b);
     
     const G4double PI = 3.14159265358979323846;
+    
+    // Rotation angle (inverted for upward beam)
     G4double theta = PI / 2 - std::atan(fSSD / L);
     G4double beta = std::atan(fSSD / L);
     G4double alpha = std::atan(a / b);
@@ -427,9 +438,11 @@ void LinacInfinityGeometry::CalculateJawPositions()
     fJawParams.displacement = z0 * L / fSSD + 
                               D1 * std::cos(alpha + theta) + 
                               D1 * std::sin(alpha + theta) / std::tan(beta);
-    fJawParams.rotationAngle = theta * rad;
     
-    G4cout << "  Jaw rotation: " << theta * 180 / PI << " deg" << G4endl;
+    // Rotation angle (negated for inverted orientation)
+    fJawParams.rotationAngle = -theta * rad;
+    
+    G4cout << "  Jaw rotation: " << -theta * 180 / PI << " deg" << G4endl;
 }
 
 //==============================================================================

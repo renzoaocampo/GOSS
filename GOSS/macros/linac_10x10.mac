@@ -31,7 +31,8 @@
 /goss/geom/phantom/halfSizeX   15 cm
 /goss/geom/phantom/halfSizeY   15 cm
 /goss/geom/phantom/halfSizeZ   15 cm
-/goss/geom/phantom/positionZ   -15 cm
+# Phantom above source: center at Z=115cm (extends from 100 to 130 cm)
+/goss/geom/phantom/positionZ   115 cm
 
 #================================================
 # DETECTORS
@@ -44,7 +45,8 @@
 /goss/geom/detector/spacing        1 cm
 /goss/geom/detector/numLayers     5
 /goss/geom/detector/layerSpacing   0.5 cm
-/goss/geom/detector/firstLayerZ    -0.5 cm
+# First layer at 100.5 cm (relative to phantom center at 115cm: 115-14.5=100.5)
+/goss/geom/detector/firstLayerZ    120 cm
 
 #================================================
 # PHYSICS & RUN
@@ -68,7 +70,7 @@
 # Gaussian spatial distribution (elliptical beam)
 /gps/pos/type Beam
 /gps/pos/shape Circle
-/gps/pos/centre 0 0 100.05 cm
+/gps/pos/centre 0 0 -0.5 cm
 /gps/pos/sigma_x 1.0 mm   # cross-plane (Y)
 /gps/pos/sigma_y 2.1 mm   # in-plane (Z)
 # NOTE: In Geant4, X is beam direction → dispersion is in Y and Z
@@ -83,16 +85,20 @@
 /gps/ene/type Mono
 /gps/ene/mono 6.6 MeV
 
+# Beam source at target (Z=0), directed upward (+Z)
+/gps/pos/centre 0 0 0 cm
+/gps/direction 0 0 -1
+
 # Variance reduction techniques
 /process/em/setDirectionalSplitting true 
-/process/em/setDirectionalSplittingTarget 0 0 0 cm 
+/process/em/setDirectionalSplittingTarget 0 0 100 cm 
 /process/em/setDirectionalSplittingRadius 29.7 cm 
 /process/em/setSecBiasing eBrem TargetRegion 20 7 MeV
 
 #================================================
 # RUN SIMULATION
 #================================================
-/run/beamOn 50000
+#/run/beamOn 50000
 
 
 
