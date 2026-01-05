@@ -1,100 +1,114 @@
 #================================================
-# GOSS Example Macro
-#================================================  
+# GOSS - Basic Configuration (No LINAC)
+#================================================
+# This macro demonstrates basic GOSS setup with
+# phantom and detector grid for dose scoring.
+#================================================
 
 #================================================
-# PHSP Writer Configuration (optional)
+# 1. WORLD GEOMETRY
 #================================================
-/action/IAEAphspWriter/namePrefix  psf_z
-/action/IAEAphspWriter/zphsp      10.1 cm
-
-#================================================
-# World Geometry (half-sizes)
-#================================================
+# World dimensions (half-sizes)
+# Full world: 100x100x240 cm
 /goss/geom/worldXY   50.0 cm
 /goss/geom/worldZ   120.0 cm
 
 #================================================
-# Phantom Configuration
+# 2. PHANTOM CONFIGURATION
 #================================================
-# Material: Use NIST names (G4_WATER, G4_PMMA, G4_TISSUE_SOFT_ICRP, etc.)
+# Water phantom for dose measurement
 /goss/geom/phantom/material    G4_WATER
 
-# Half-sizes (full size = 2 * halfSize)
+# Phantom dimensions (half-sizes)
+# Full phantom: 30x30x20 cm
 /goss/geom/phantom/halfSizeX   15 cm
 /goss/geom/phantom/halfSizeY   15 cm
 /goss/geom/phantom/halfSizeZ   10 cm
 
-# Center Z position
+# Phantom position (center at origin)
 /goss/geom/phantom/positionZ   0 cm
 
 #================================================
-# Detector Grid Configuration
+# 3. DETECTOR GRID
 #================================================
-# Material
+# Silicon detectors for dose scoring
 /goss/geom/detector/material       G4_Si
 
-# Individual detector half-sizes
+# Individual detector size (half-sizes)
+# Each detector: 0.6x0.6x0.6 cm
 /goss/geom/detector/halfSizeX      0.3 cm
 /goss/geom/detector/halfSizeY      0.3 cm
 /goss/geom/detector/halfThickness  0.3 cm
 
-# Grid: 40x40 = 1600 detectors per layer
+# Grid configuration
+# 21x21 = 441 detectors per layer
 /goss/geom/detector/gridSize       21
-
-# Center-to-center spacing
 /goss/geom/detector/spacing        1 cm
 
-# Layers configuration
+# Multiple layers for depth-dose
+# 10 layers, 1 cm apart, starting at 5 cm from phantom center
 /goss/geom/detector/numLayers     10
 /goss/geom/detector/layerSpacing   1 cm
 /goss/geom/detector/firstLayerZ    5 cm
 
 #================================================
-# Physics
+# 4. PHYSICS
 #================================================
+# Electromagnetic physics optimized for medical applications
 /my_phys/setList  EMStandardPhysics_option4
 
 #================================================
-# GOSS Dose Scoring Configuration
+# 5. GOSS DOSE SCORING
 #================================================
+# Save dose data every 1000 events
 /goss/saveInterval  1000
+
+# Output file name (will create dose_output_*.csv)
 /goss/outputFile    dose_output
+
+# Merge CSV files from all threads
 /goss/mergeCSV      true
+
+# Random seed (optional, uncomment to set)
 #/goss/seed         12345
 
-
-
+#================================================
+# 6. RUN CONFIGURATION
+#================================================
+# Use 4 threads for parallel processing
 /run/numberOfThreads 4
- 
+
+# Initialize geometry and physics
 /run/initialize
- 
+
+# Production cuts
 /run/setCut  0.1 mm
 
 #================================================
-# GPS Beam Configuration
+# 7. BEAM CONFIGURATION (GPS)
 #================================================
+# 6 MeV photon beam
 /gps/particle gamma
 /gps/ene/type Mono
 /gps/ene/mono 6 MeV
 
-# Point source above phantom, directed towards -Z (towards detectors)
+# Point source 40 cm above phantom
 /gps/pos/type Point
 /gps/pos/centre 0 0 40 cm
+
+# Beam directed downward (-Z)
 /gps/direction 0 0 -1
 
+#================================================
+# 8. RUN SIMULATION
+#================================================
 /run/beamOn 100000
 
 #================================================
-# Visualization (optional)
-#================================================
+# Optional: Visualization
+#================================================ 
 /vis/open OGL
 /vis/drawVolume
 /vis/scene/add/axes
-/vis/scene/add/trajectories smooth
-/vis/scene/add/hits
 /vis/viewer/set/autoRefresh true
 /vis/viewer/flush
-/vis/viewer/zoom 1.5
-/vis/scene/endOfEventAction accumulate
-/vis/scene/endOfRunAction accumulate

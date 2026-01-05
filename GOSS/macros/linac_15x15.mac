@@ -1,0 +1,127 @@
+#================================================
+# GOSS - LINAC Elekta Infinity 6MV
+#================================================
+# Complete LINAC simulation with Elekta Infinity
+# 15x15 cm field at isocenter
+#================================================
+
+#================================================
+# 1. WORLD GEOMETRY
+#================================================
+# Larger world for LINAC components
+# Full world: 200x200x300 cm
+/goss/geom/worldXY   100.0 cm
+/goss/geom/worldZ    150.0 cm
+
+#================================================
+# 2. LINAC CONFIGURATION
+#================================================
+# Enable Elekta Infinity 6MV LINAC
+# Includes: Target, Collimators, Filter, MLC, Jaws
+/goss/geom/linac/ElektaInfinity6MV/enable true
+
+# Field size at isocenter (100 cm from source)
+# MLC and Jaws automatically adjust
+/goss/geom/linac/ElektaInfinity6MV/fieldSize 15.0 cm
+
+#================================================
+# 3. PHANTOM CONFIGURATION
+#================================================
+# Water phantom positioned below isocenter
+/goss/geom/phantom/material    G4_WATER
+
+# Phantom dimensions (half-sizes)
+# Full phantom: 30x30x30 cm
+/goss/geom/phantom/halfSizeX   15 cm
+/goss/geom/phantom/halfSizeY   15 cm
+/goss/geom/phantom/halfSizeZ   15 cm
+
+# Phantom center at -15 cm (extends from -30 to 0 cm)
+/goss/geom/phantom/positionZ   -15 cm
+
+#================================================
+# 4. DETECTOR GRID
+#================================================
+# Water-equivalent detectors for dose scoring
+/goss/geom/detector/material     G4_WATER
+
+# Individual detector size (half-sizes)
+# Each detector: 0.6x0.6x0.6 cm
+/goss/geom/detector/halfSizeX      0.3 cm
+/goss/geom/detector/halfSizeY      0.3 cm
+/goss/geom/detector/halfThickness  0.3 cm
+
+# Grid configuration
+# 21x21 = 441 detectors per layer
+/goss/geom/detector/gridSize       21
+/goss/geom/detector/spacing        1 cm
+
+# Depth-dose layers
+# 5 layers, 0.5 cm apart
+# First layer at -0.5 cm relative to phantom center
+# (absolute position: -15.5 cm)
+/goss/geom/detector/numLayers     5
+/goss/geom/detector/layerSpacing   0.5 cm
+/goss/geom/detector/firstLayerZ    -0.5 cm
+
+#================================================
+# 5. PHYSICS
+#================================================
+# Electromagnetic physics optimized for radiotherapy
+/my_phys/setList  EMStandardPhysics_option4
+
+#================================================
+# 6. GOSS DOSE SCORING
+#================================================
+# Save dose data every 1000 events
+/goss/saveInterval  1000
+
+# Output file name
+/goss/outputFile    dose_linac_15x15
+
+# Merge CSV files from all threads
+/goss/mergeCSV      true
+
+#================================================
+# 7. RUN CONFIGURATION
+#================================================
+# Use 4 threads for parallel processing
+/run/numberOfThreads 4
+
+# Initialize geometry and physics
+/run/initialize
+
+# Production cuts
+/run/setCut  0.1 mm
+
+#================================================
+# 8. BEAM CONFIGURATION
+#================================================
+# 6 MeV electron beam at LINAC target
+/gps/particle e-
+/gps/ene/type Mono
+/gps/ene/mono 6 MeV
+
+# Point source at target position (SSD = 100 cm)
+/gps/pos/type Point
+/gps/pos/centre 0 0 100 cm
+
+# Beam directed toward patient (-Z)
+/gps/direction 0 0 -1
+
+#================================================
+# 9. RUN SIMULATION
+#================================================
+/run/beamOn 10000
+
+#================================================
+# Optional: Visualization
+#================================================
+# Uncomment to visualize LINAC geometry
+#/vis/open OGL
+#/vis/drawVolume
+#/vis/scene/add/axes
+#/vis/scene/add/trajectories smooth
+#/vis/viewer/set/autoRefresh true
+#/vis/viewer/flush
+#/vis/viewer/zoom 1.5

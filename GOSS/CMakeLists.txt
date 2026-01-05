@@ -42,32 +42,10 @@ add_subdirectory(iaea_phsp)
 #----------------------------------------------------------------------------
 # Add the executable, and link it to the Geant4 libraries
 #
-add_executable(IAEAphsp IAEAphsp.cc ${sources} ${headers})
-target_link_libraries(IAEAphsp iaea_phsp ${Geant4_LIBRARIES})
-
-#----------------------------------------------------------------------------
-# Copy all scripts to the build directory, i.e. the directory in which we
-# build IAEAphsp.
-# This is so that we can run the executable directly because it
-# relies on these scripts being in the current working directory.
-#
-set(IAEAphsp_SCRIPTS
-    goss.mac
-    macros/test-reader.mac macros/test-writer.mac macros/test-rw.mac macros/vis.mac
-    phsp/test.IAEAheader phsp/test.IAEAphsp
-    phsp/PSF_example.IAEAheader phsp/PSF_example.IAEAphsp
-  )
-
-foreach(_script ${IAEAphsp_SCRIPTS})
-  configure_file(
-    ${PROJECT_SOURCE_DIR}/${_script}
-    ${PROJECT_BINARY_DIR}/${_script}
-    COPYONLY
-    )
-endforeach()
+add_executable(goss main.cc ${sources} ${headers})
+target_link_libraries(goss iaea_phsp ${Geant4_LIBRARIES})
 
 #----------------------------------------------------------------------------
 # Install the executable to 'bin' directory under CMAKE_INSTALL_PREFIX
 #
-install(TARGETS IAEAphsp DESTINATION bin)
-
+install(TARGETS goss DESTINATION bin)
